@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floor Plan Editor - IntraMap</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body>
+    <div class="admin-container">
+        <!-- Top Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <a href="index.html" class="btn btn-secondary btn-sm">← Home</a>
+                <input type="text" id="buildingName" class="building-name-input"
+                    placeholder="Building Name (e.g., Centaurus Mall)" autocomplete="off">
+                <div class="auto-save-indicator" id="autoSaveIndicator">
+                    <span id="autoSaveText">●</span>
+                    <span id="autoSaveLabel">Draft saved</span>
+                </div>
+            </div>
+
+            <div class="toolbar-center">
+                <div class="floor-tabs">
+                    <button class="floor-tab active" data-floor="ground">Ground</button>
+                    <button class="floor-tab" data-floor="first">First</button>
+                    <button class="floor-tab" data-floor="second">Second</button>
+                </div>
+            </div>
+
+            <div class="toolbar-right">
+                <button class="btn btn-secondary btn-sm" onclick="loadFromCloud()">📥 Load</button>
+                <button class="btn btn-success btn-sm" onclick="saveToCloud()">☁️ Save to Cloud</button>
+                <button class="btn btn-primary btn-sm" onclick="generateQRCode()">📱 Generate QR</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar - Tools -->
+            <div class="sidebar-left">
+                <!-- Shape Tools -->
+                <div class="sidebar-section">
+                    <h3>Shapes</h3>
+                    <div class="tool-grid">
+                        <button class="tool-btn" data-tool="rect">
+                            <span class="tool-icon">▭</span>
+                            <span>Rectangle</span>
+                        </button>
+                        <button class="tool-btn" data-tool="circle">
+                            <span class="tool-icon">●</span>
+                            <span>Circle</span>
+                        </button>
+                        <button class="tool-btn" data-tool="text">
+                            <span class="tool-icon">T</span>
+                            <span>Text</span>
+                        </button>
+                        <button class="tool-btn" data-tool="select">
+                            <span class="tool-icon">↖</span>
+                            <span>Select</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Icon Library -->
+                <div class="sidebar-section">
+                    <h3>Icons</h3>
+                    <div class="icon-grid" id="iconGrid">
+                        <!-- Icons will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Color Presets -->
+                <div class="sidebar-section">
+                    <h3>Colors</h3>
+                    <div class="color-presets">
+                        <div class="color-preset" style="background: #3B82F6;" data-color="#3B82F6"
+                            title="Food/Restaurant"></div>
+                        <div class="color-preset" style="background: #10B981;" data-color="#10B981" title="Restroom">
+                        </div>
+                        <div class="color-preset" style="background: #EF4444;" data-color="#EF4444"
+                            title="Exit/Emergency"></div>
+                        <div class="color-preset" style="background: #6B7280;" data-color="#6B7280" title="Shop/Retail">
+                        </div>
+                        <div class="color-preset" style="background: #F59E0B;" data-color="#F59E0B"
+                            title="Service/Info"></div>
+                        <div class="color-preset" style="background: #8B5CF6;" data-color="#8B5CF6" title="Custom">
+                        </div>
+                        <div class="color-preset" style="background: #EC4899;" data-color="#EC4899" title="Custom">
+                        </div>
+                        <div class="color-preset" style="background: #14B8A6;" data-color="#14B8A6" title="Custom">
+                        </div>
+                        <div class="color-preset" style="background: #F97316;" data-color="#F97316" title="Custom">
+                        </div>
+                        <div class="color-preset" style="background: #1F2937;" data-color="#1F2937" title="Custom">
+                        </div>
+                    </div>
+                    <div class="mt-sm">
+                        <label class="property-label">Custom Color</label>
+                        <input type="color" id="customColorPicker" class="property-input" value="#3B82F6">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <canvas id="floorPlanCanvas" width="800" height="600"></canvas>
+                </div>
+
+                <div class="canvas-controls">
+                    <button class="btn btn-secondary btn-icon" onclick="zoomIn()" title="Zoom In">🔍+</button>
+                    <button class="btn btn-secondary btn-icon" onclick="zoomOut()" title="Zoom Out">🔍-</button>
+                    <button class="btn btn-secondary btn-icon" onclick="resetZoom()" title="Reset Zoom">⟲</button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearCanvas()">🗑️ Clear Floor</button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar - Properties -->
+            <div class="sidebar-right">
+                <div id="propertiesPanel">
+                    <div class="properties-empty">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                        </svg>
+                        <p>Select an object to edit its properties</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="modal-overlay hidden" onclick="closeQRModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>QR Code Generated</h3>
+                <button class="btn btn-secondary btn-icon btn-sm" onclick="closeQRModal()">✕</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <p class="text-gray mb-md">Scan this QR code to view your floor plan</p>
+                <div id="qrCodeContainer"></div>
+                <p class="text-sm text-muted mt-md" id="qrURL"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="downloadQRCode()">Download QR</button>
+                <button class="btn btn-primary" onclick="closeQRModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Libraries -->
+    <script src="lib/fabric.min.js"></script>
+    <script src="lib/qrcode.min.js"></script>
+    <script src="js/icons.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

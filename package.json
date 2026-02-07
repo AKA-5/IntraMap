@@ -1,0 +1,22 @@
+{
+    "name": "intramap",
+    "version": "1.0.0",
+    "description": "Indoor floor plan navigation system with QR code support",
+    "scripts": {
+        "dev": "npx http-server public -p 3000 -o",
+        "deploy:worker": "cd worker && wrangler deploy",
+        "deploy:vercel": "vercel --prod"
+    },
+    "keywords": [
+        "indoor",
+        "navigation",
+        "floor-plan",
+        "qr-code",
+        "maps"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "http-server": "^14.1.1"
+    }
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Interactive indoor floor plan navigation">
+    <title>Floor Plan Viewer - IntraMap</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/viewer.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3B82F6">
+</head>
+
+<body>
+    <div class="viewer-container">
+        <!-- Header -->
+        <div class="viewer-header">
+            <div class="header-content">
+                <div class="building-title">
+                    <h1 id="buildingName">Loading...</h1>
+                    <p id="buildingFloor">Ground Floor</p>
+                </div>
+
+                <select id="floorSelector" class="floor-selector">
+                    <option value="ground">Ground Floor</option>
+                    <option value="first">First Floor</option>
+                    <option value="second">Second Floor</option>
+                </select>
+
+                <div class="search-bar">
+                    <input type="search" id="searchInput" placeholder="Search places, tags..." autocomplete="off">
+                    <span class="search-icon">🔍</span>
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="viewer-canvas-container">
+            <!-- Loading Overlay -->
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner"></div>
+                <h2>Loading floor plan...</h2>
+            </div>
+
+            <!-- Canvas Wrapper -->
+            <div class="viewer-canvas-wrapper">
+                <canvas id="viewerCanvas"></canvas>
+            </div>
+
+            <!-- Controls -->
+            <div class="viewer-controls">
+                <div class="control-group">
+                    <button class="btn btn-secondary btn-icon" onclick="zoomIn()" title="Zoom In">🔍+</button>
+                    <button class="btn btn-secondary btn-icon" onclick="zoomOut()" title="Zoom Out">🔍-</button>
+                    <button class="btn btn-secondary btn-icon" onclick="resetView()" title="Reset View">⟲</button>
+                </div>
+                <button id="youAreHereBtn" class="you-are-here-btn" onclick="toggleYouAreHere()">
+                    📍 You Are Here
+                </button>
+            </div>
+
+            <!-- Object Info Popup -->
+            <div id="objectPopup" class="object-popup">
+                <div class="popup-header">
+                    <div class="popup-title">
+                        <h3 id="popupName">Place Name</h3>
+                        <span id="popupFloor" class="badge badge-primary">Ground Floor</span>
+                    </div>
+                    <button class="popup-close" onclick="closePopup()">×</button>
+                </div>
+                <div id="popupTags" class="popup-tags"></div>
+                <div class="popup-actions">
+                    <button class="btn btn-primary" onclick="getDirections()">
+                        📍 Get Directions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Libraries -->
+    <script src="lib/fabric.min.js"></script>
+    <script src="js/icons.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/viewer.js"></script>
+</body>
+
+</html>

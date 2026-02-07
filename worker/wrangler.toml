@@ -1,0 +1,15 @@
+name = "intramap-api"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# KV Namespace binding
+[[kv_namespaces]]
+binding = "BUILDINGS"
+id = "4388a9bcb3af4b99ad00fa8600a41e51"
+# Replace with actual KV namespace ID after running: wrangler kv:namespace create BUILDINGS
+
+# For production, create a separate namespace:
+# [[kv_namespaces]]
+# binding = "BUILDINGS"
+# id = "YOUR_PRODUCTION_KV_NAMESPACE_ID_HERE"
+# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID_HERE"
