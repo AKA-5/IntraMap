@@ -5,7 +5,7 @@ class IntraMapAPI {
     constructor(baseURL = '') {
         // Default to relative URLs for same-origin requests
         // Update this after deploying Cloudflare Worker
-        this.baseURL = baseURL || window.INTRAMAP_API_URL || '';
+        this.baseURL = baseURL || 'https://intramap-api.kaleempk555.workers.dev';
     }
 
     /**

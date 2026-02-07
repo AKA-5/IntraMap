@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Create and share interactive indoor floor plans with QR code navigation">
+  <script>
+    window.INTRAMAP_API_URL = 'https://intramap-api.kaleempk555.workers.dev';
+  </script>
   <title>IntraMap - Indoor Floor Plan Navigation</title>
   <link rel="stylesheet" href="css/common.css">
   <style>
@@ -214,12 +218,14 @@
     }
   </style>
 </head>
+
 <body>
   <!-- Hero Section -->
   <section class="hero">
     <div class="hero-content">
       <h1>🗺️ IntraMap</h1>
-      <p>Create beautiful indoor floor plans and help visitors navigate your building with ease. No coding required, 100% free forever.</p>
+      <p>Create beautiful indoor floor plans and help visitors navigate your building with ease. No coding required,
+        100% free forever.</p>
       <div class="hero-buttons">
         <a href="admin.html" class="btn btn-hero-primary">Create Floor Plan</a>
         <a href="viewer.html?building=sample" class="btn btn-hero-secondary">View Demo</a>
@@ -271,14 +277,10 @@
     <div class="qr-container">
       <h2>Generate QR Code</h2>
       <p class="text-gray">Already created a floor plan? Generate a QR code to share with visitors.</p>
-      
+
       <div class="qr-input-group">
-        <input 
-          type="text" 
-          id="buildingIdInput" 
-          placeholder="Enter building ID (e.g., centaurus-mall)"
-          autocomplete="off"
-        >
+        <input type="text" id="buildingIdInput" placeholder="Enter building ID (e.g., centaurus-mall)"
+          autocomplete="off">
         <button class="btn btn-primary" onclick="generateQR()">Generate QR</button>
       </div>
 
@@ -302,14 +304,14 @@
   <!-- QR Code Library -->
   <script src="lib/qrcode.min.js"></script>
   <script src="js/api.js"></script>
-  
+
   <script>
     // QR Code Generation
     let qrCode = null;
 
     function generateQR() {
       const buildingId = document.getElementById('buildingIdInput').value.trim();
-      
+
       if (!buildingId) {
         alert('Please enter a building ID');
         return;
@@ -317,16 +319,16 @@
 
       // Get viewer URL
       const viewerURL = api.getViewerURL(buildingId);
-      
+
       // Clear previous QR code
       const canvas = document.getElementById('qrCodeCanvas');
       const display = document.getElementById('qrCodeDisplay');
-      
+
       // Generate new QR code
       if (qrCode) {
         qrCode.clear();
       }
-      
+
       qrCode = new QRCode(canvas, {
         text: viewerURL,
         width: 256,
@@ -335,10 +337,10 @@
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
       });
-      
+
       // Show QR code display
       display.classList.add('visible');
-      
+
       // Scroll to QR code
       display.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -346,7 +348,7 @@
     function downloadQR() {
       const canvas = document.getElementById('qrCodeCanvas').querySelector('canvas');
       if (!canvas) return;
-      
+
       const link = document.createElement('a');
       link.download = 'intramap-qr-code.png';
       link.href = canvas.toDataURL();
@@ -361,4 +363,5 @@
     });
   </script>
 </body>
+
 </html>
