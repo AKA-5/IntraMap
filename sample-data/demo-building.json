@@ -41,8 +41,24 @@
                     "ry": 4,
                     "objectLabel": "Food Court",
                     "objectTags": "food, restaurant, dining",
-                    "objectIcon": null,
+                    "objectIcon": "restaurant",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Food Court",
+                    "left": 175,
+                    "top": 140,
+                    "fontSize": 16,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 },
                 {
                     "type": "rect",
@@ -60,8 +76,24 @@
                     "ry": 4,
                     "objectLabel": "Restrooms",
                     "objectTags": "restroom, washroom, toilet",
-                    "objectIcon": null,
+                    "objectIcon": "restroom",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Restrooms",
+                    "left": 375,
+                    "top": 140,
+                    "fontSize": 16,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 },
                 {
                     "type": "rect",
@@ -79,8 +111,24 @@
                     "ry": 4,
                     "objectLabel": "Electronics Store",
                     "objectTags": "shop, electronics, retail",
-                    "objectIcon": null,
+                    "objectIcon": "shop",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Electronics\nStore",
+                    "left": 575,
+                    "top": 140,
+                    "fontSize": 14,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 },
                 {
                     "type": "rect",
@@ -98,8 +146,24 @@
                     "ry": 4,
                     "objectLabel": "Information Desk",
                     "objectTags": "info, help, service",
-                    "objectIcon": null,
+                    "objectIcon": "info",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Information\nDesk",
+                    "left": 175,
+                    "top": 290,
+                    "fontSize": 14,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 },
                 {
                     "type": "rect",
@@ -117,8 +181,24 @@
                     "ry": 4,
                     "objectLabel": "Fashion Boutique",
                     "objectTags": "clothing, fashion, shop",
-                    "objectIcon": null,
+                    "objectIcon": "shop",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Fashion\nBoutique",
+                    "left": 375,
+                    "top": 290,
+                    "fontSize": 14,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 },
                 {
                     "type": "rect",
@@ -136,8 +216,24 @@
                     "ry": 4,
                     "objectLabel": "Emergency Exit",
                     "objectTags": "exit, emergency, safety",
-                    "objectIcon": null,
+                    "objectIcon": "exit",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Emergency\nExit",
+                    "left": 575,
+                    "top": 290,
+                    "fontSize": 14,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 },
                 {
                     "type": "rect",
@@ -157,6 +253,22 @@
                     "objectTags": "entrance, entry, main",
                     "objectIcon": null,
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Main Entrance",
+                    "left": 375,
+                    "top": 430,
+                    "fontSize": 18,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 }
             ]
         },
@@ -196,8 +308,24 @@
                     "ry": 4,
                     "objectLabel": "Cinema Hall 1",
                     "objectTags": "cinema, movie, entertainment",
-                    "objectIcon": null,
+                    "objectIcon": "cafe",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Cinema\nHall 1",
+                    "left": 200,
+                    "top": 165,
+                    "fontSize": 16,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 },
                 {
                     "type": "rect",
@@ -215,8 +343,24 @@
                     "ry": 4,
                     "objectLabel": "Cinema Hall 2",
                     "objectTags": "cinema, movie, entertainment",
-                    "objectIcon": null,
+                    "objectIcon": "cafe",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Cinema\nHall 2",
+                    "left": 450,
+                    "top": 165,
+                    "fontSize": 16,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 },
                 {
                     "type": "rect",
@@ -234,8 +378,24 @@
                     "ry": 4,
                     "objectLabel": "Game Zone",
                     "objectTags": "games, arcade, entertainment",
-                    "objectIcon": null,
+                    "objectIcon": "cafe",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Game Zone",
+                    "left": 325,
+                    "top": 340,
+                    "fontSize": 20,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 },
                 {
                     "type": "rect",
@@ -253,8 +413,25 @@
                     "ry": 4,
                     "objectLabel": "Restrooms",
                     "objectTags": "restroom, washroom, toilet",
-                    "objectIcon": null,
+                    "objectIcon": "restroom",
                     "objectLocked": false
+                },
+                {
+                    "type": "i-text",
+                    "text": "Restrooms",
+                    "left": 650,
+                    "top": 240,
+                    "fontSize": 16,
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                    "fill": "#FFFFFF",
+                    "textAlign": "center",
+                    "originX": "center",
+                    "originY": "center",
+                    "angle": 270,
+                    "objectLabel": "",
+                    "objectTags": "",
+                    "selectable": false
                 }
             ]
         }
