@@ -95,16 +95,12 @@ if (navigator.serviceWorker) {
 // Initialize API
 const api = new IntraMapAPI();
 async function loadBuildingData() {
-    // The original line `const buildingId = api.getBuildingIdFromURL();` is replaced by the global `buildingId`
-    // and the `api` initialization is moved outside the function.
-
     if (!buildingId) {
         showError('No building ID provided in URL');
         return;
     }
 
     try {
-        // Show loading
         document.getElementById('loadingOverlay').classList.remove('hidden');
 
         // FORCE RELOAD for demo/sample to ensure fresh data
@@ -116,88 +112,31 @@ async function loadBuildingData() {
         // Load from API
         buildingData = await api.loadBuilding(buildingId);
 
-        // ... rest of function ...
-
-        // ... inside showObjectDetails ...
-
-        // Smart positioning
-        const canvasRect = canvas.getElement().getBoundingClientRect();
-        const objCenter = obj.getCenterPoint();
-        const zoom = canvas.getZoom();
-
-        const objViewportX = canvasRect.left + objCenter.x * zoom;
-        const objViewportY = canvasRect.top + objCenter.y * zoom;
-
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-
-        // Make visible but transparent to measure dimensions
-        popup.style.opacity = '0';
-        popup.classList.add('visible');
-
-        // Get precise dimensions
-        const popupRect = popup.getBoundingClientRect();
-        const popupWidth = popupRect.width || 300;
-        const popupHeight = popupRect.height || 200;
-
-        // Restore opacity
-        popup.style.opacity = '1';
-
-        // 1. Start with preferred position: To the RIGHT of the object, Centered Vertically
-        let left = objViewportX + (obj.width * zoom / 2) + 15;
-        let top = objViewportY - (popupHeight / 2);
-
-        // 2. Check Right Edge: If it doesn't fit on right, try LEFT
-        if (left + popupWidth > viewportWidth - 20) {
-            left = objViewportX - (obj.width * zoom / 2) - popupWidth - 15;
+        if (!buildingData) {
+            throw new Error('No data received');
         }
 
-        // 3. Check Bottom Edge: If it goes off bottom, push it UP
-        if (top + popupHeight > viewportHeight - 20) {
-            top = viewportHeight - popupHeight - 20;
-        }
-
-        // 4. Check Top Edge: If it goes off top, push it DOWN
-        if (top < 20) {
-            top = 20;
-        }
-
-        // 5. Special Case: Small Screens / Mobile
-        if (viewportWidth < 768) {
-            // Center on screen or stick to bottom
-            left = (viewportWidth - popupWidth) / 2;
-            top = (viewportHeight - popupHeight) / 2;
-        }
-
-        // Apply computed positions
-        popup.style.left = `${left}px`;
-        popup.style.top = `${top}px`;
-        popup.classList.add('visible');
-
-        selectedObject = obj;
+        // Initialize UI with data
         document.getElementById('buildingName').textContent = buildingData.name;
         document.title = `${buildingData.name} - IntraMap`;
 
-        // Populate floor selector dynamically
+        // Setup floor selector
         populateFloorSelector();
 
         // Load initial floor
         loadFloorToCanvas(currentFloor);
 
-        // Hide loading
         document.getElementById('loadingOverlay').classList.add('hidden');
 
-        // Cache for offline use
-        cacheBuilding(buildingData);
-
     } catch (error) {
-        console.error('Failed to load building:', error);
+        console.error('Error loading building:', error);
 
-        // Try to load from cache
+        // Try to load from cache if offline
         const cached = getCachedBuilding(buildingId);
         if (cached) {
             buildingData = cached;
             document.getElementById('buildingName').textContent = buildingData.name;
+            populateFloorSelector();
             loadFloorToCanvas(currentFloor);
             document.getElementById('loadingOverlay').classList.add('hidden');
             showToast('Loaded from offline cache', 'info');
@@ -205,6 +144,74 @@ async function loadBuildingData() {
             showError('Failed to load building: ' + error.message);
         }
     }
+}
+const popupHeight = popupRect.height || 200;
+
+// Restore opacity
+popup.style.opacity = '1';
+
+// 1. Start with preferred position: To the RIGHT of the object, Centered Vertically
+let left = objViewportX + (obj.width * zoom / 2) + 15;
+let top = objViewportY - (popupHeight / 2);
+
+// 2. Check Right Edge: If it doesn't fit on right, try LEFT
+if (left + popupWidth > viewportWidth - 20) {
+    left = objViewportX - (obj.width * zoom / 2) - popupWidth - 15;
+}
+
+// 3. Check Bottom Edge: If it goes off bottom, push it UP
+if (top + popupHeight > viewportHeight - 20) {
+    top = viewportHeight - popupHeight - 20;
+}
+
+// 4. Check Top Edge: If it goes off top, push it DOWN
+if (top < 20) {
+    top = 20;
+}
+
+// 5. Special Case: Small Screens / Mobile
+if (viewportWidth < 768) {
+    // Center on screen or stick to bottom
+    left = (viewportWidth - popupWidth) / 2;
+    top = (viewportHeight - popupHeight) / 2;
+}
+
+// Apply computed positions
+popup.style.left = `${left}px`;
+popup.style.top = `${top}px`;
+popup.classList.add('visible');
+
+selectedObject = obj;
+document.getElementById('buildingName').textContent = buildingData.name;
+document.title = `${buildingData.name} - IntraMap`;
+
+// Populate floor selector dynamically
+populateFloorSelector();
+
+// Load initial floor
+loadFloorToCanvas(currentFloor);
+
+// Hide loading
+document.getElementById('loadingOverlay').classList.add('hidden');
+
+// Cache for offline use
+cacheBuilding(buildingData);
+
+    } catch (error) {
+    console.error('Failed to load building:', error);
+
+    // Try to load from cache
+    const cached = getCachedBuilding(buildingId);
+    if (cached) {
+        buildingData = cached;
+        document.getElementById('buildingName').textContent = buildingData.name;
+        loadFloorToCanvas(currentFloor);
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        showToast('Loaded from offline cache', 'info');
+    } else {
+        showError('Failed to load building: ' + error.message);
+    }
+}
 }
 
 // Populate floor selector dynamically
