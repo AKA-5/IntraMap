@@ -19,18 +19,23 @@
     <div class="viewer-container">
         <!-- Header -->
         <div class="viewer-header">
-            <div class="header-content">
-                <a href="index.html" class="back-btn" title="Back to Home">← Home</a>
+            <!-- Back Button - Absolute Positioned -->
+            <a href="index.html" class="back-btn" title="Back to Home">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                Home
+            </a>
 
+            <div class="header-content">
                 <div class="building-title">
                     <h1 id="buildingName">Loading...</h1>
-                    <p id="buildingFloor">Ground Floor</p>
+                    <p id="buildingFloor">...</p>
                 </div>
 
                 <select id="floorSelector" class="floor-selector">
-                    <option value="ground">Ground Floor</option>
-                    <option value="first">First Floor</option>
-                    <option value="second">Second Floor</option>
+                    <!-- Options populated dynamically -->
                 </select>
 
                 <div class="search-bar">

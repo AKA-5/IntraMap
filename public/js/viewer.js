@@ -114,40 +114,50 @@ async function loadBuildingData() {
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
 
-        // Measure popup
+        // Make visible but transparent to measure dimensions
         popup.style.opacity = '0';
         popup.classList.add('visible');
-        const popupWidth = popup.offsetWidth || 300;
-        const popupHeight = popup.offsetHeight || 200;
+
+        // Get precise dimensions
+        const popupRect = popup.getBoundingClientRect();
+        const popupWidth = popupRect.width || 300;
+        const popupHeight = popupRect.height || 200;
+
+        // Restore opacity
         popup.style.opacity = '1';
 
-        let left = objViewportX + 20;
-        let top = objViewportY - popupHeight / 2;
+        // 1. Start with preferred position: To the RIGHT of the object, Centered Vertically
+        let left = objViewportX + (obj.width * zoom / 2) + 15;
+        let top = objViewportY - (popupHeight / 2);
 
-        // PREFER ABOVE if in bottom half
-        if (objViewportY > viewportHeight * 0.6) {
-            top = objViewportY - popupHeight - 20; // Position above logic
-            // Center horizontally if positioned above
-            left = objViewportX - popupWidth / 2;
-        } else {
-            // Standard side positioning logic
-            if (left + popupWidth > viewportWidth - 20) {
-                left = objViewportX - popupWidth - 20;
-            }
+        // 2. Check Right Edge: If it doesn't fit on right, try LEFT
+        if (left + popupWidth > viewportWidth - 20) {
+            left = objViewportX - (obj.width * zoom / 2) - popupWidth - 15;
         }
 
-        // Final boundary checks
-        if (left < 20) left = 20;
-        if (left + popupWidth > viewportWidth - 20) left = viewportWidth - popupWidth - 20;
+        // 3. Check Bottom Edge: If it goes off bottom, push it UP
+        if (top + popupHeight > viewportHeight - 20) {
+            top = viewportHeight - popupHeight - 20;
+        }
 
-        if (top < 20) top = 20;
-        if (top + popupHeight > viewportHeight - 20) top = viewportHeight - popupHeight - 20;
+        // 4. Check Top Edge: If it goes off top, push it DOWN
+        if (top < 20) {
+            top = 20;
+        }
 
+        // 5. Special Case: Small Screens / Mobile
+        if (viewportWidth < 768) {
+            // Center on screen or stick to bottom
+            left = (viewportWidth - popupWidth) / 2;
+            top = (viewportHeight - popupHeight) / 2;
+        }
+
+        // Apply computed positions
         popup.style.left = `${left}px`;
         popup.style.top = `${top}px`;
         popup.classList.add('visible');
 
-        // Update UI
+        selectedObject = obj;
         document.getElementById('buildingName').textContent = buildingData.name;
         document.title = `${buildingData.name} - IntraMap`;
 
@@ -262,6 +272,12 @@ function loadFloorToCanvas(floor) {
                             allObjects.push(obj);
                             svgLoadCount++;
                             if (svgLoadCount === totalSvgObjects) {
+                                // Re-order: Bring all strings/text to front to ensure not hidden by icons
+                                canvas.getObjects().forEach(o => {
+                                    if (o.type === 'i-text') {
+                                        o.bringToFront();
+                                    }
+                                });
                                 canvas.renderAll();
                             }
                         });
