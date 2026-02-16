@@ -95,6 +95,7 @@ if (navigator.serviceWorker) {
 // Initialize API
 const api = new IntraMapAPI();
 async function loadBuildingData() {
+    console.log('Starting loadBuildingData...');
     if (!buildingId) {
         showError('No building ID provided in URL');
         return;
@@ -103,35 +104,50 @@ async function loadBuildingData() {
     try {
         document.getElementById('loadingOverlay').classList.remove('hidden');
 
-        // FORCE RELOAD for demo/sample to ensure fresh data
+        // FORCE RELOAD for demo/sample
         if (buildingId === 'sample') {
             console.log('Forcing fresh load for sample...');
             localStorage.removeItem(`intramap_building_${buildingId}`);
         }
 
-        // Load from API
-        buildingData = await api.loadBuilding(buildingId);
+        console.log('Calling api.loadBuilding with ID:', buildingId);
+
+        // Timeout race to catch hanging fetches
+        const fetchPromise = api.loadBuilding(buildingId);
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Network timeout - fetch took too long')), 10000)
+        );
+
+        buildingData = await Promise.race([fetchPromise, timeoutPromise]);
+
+        console.log('Data received:', buildingData);
 
         if (!buildingData) {
-            throw new Error('No data received');
+            throw new Error('No data received (empty response)');
         }
 
         // Initialize UI with data
-        document.getElementById('buildingName').textContent = buildingData.name;
+        const nameEl = document.getElementById('buildingName');
+        if (nameEl) nameEl.textContent = buildingData.name;
+
         document.title = `${buildingData.name} - IntraMap`;
 
         // Setup floor selector
+        console.log('Populating floor selector...');
         populateFloorSelector();
 
         // Load initial floor
+        console.log('Loading floor to canvas:', currentFloor);
         loadFloorToCanvas(currentFloor);
 
+        console.log('Hiding overlay...');
         document.getElementById('loadingOverlay').classList.add('hidden');
 
     } catch (error) {
         console.error('Error loading building:', error);
+        alert('Critical Error: ' + error.message); // Visible feedback for user
 
-        // Try to load from cache if offline
+        // Try to load from cache
         const cached = getCachedBuilding(buildingId);
         if (cached) {
             buildingData = cached;
