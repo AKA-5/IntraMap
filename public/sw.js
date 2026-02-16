@@ -1,18 +1,17 @@
 // IntraMap - Service Worker for PWA
 // Enables offline functionality and caching
 
-const CACHE_NAME = 'intramap-v1';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'intramap-v2-force-refresh'; // Bumped version
+const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
-    '/admin.html',
     '/viewer.html',
     '/css/common.css',
-    '/css/admin.css',
+    '/css/index.css',
     '/css/viewer.css',
     '/js/api.js',
+    '/js/common.js',
     '/js/icons.js',
-    '/js/admin.js',
     '/js/viewer.js',
     '/lib/fabric.min.js',
     '/lib/qrcode.min.js',
