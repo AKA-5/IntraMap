@@ -50,7 +50,8 @@ class IntraMapAPI {
             // SPECIAL CASE: Load demo building from local file to ensure latest version
             if (sanitizedId === 'sample') {
                 console.log('Loading demo building from local file...');
-                const response = await fetch('data/demo-building.json');
+                // Add timestamp to prevent caching
+                const response = await fetch(`data/demo-building.json?v=${new Date().getTime()}`);
                 if (!response.ok) {
                     throw new Error('Failed to load local demo data');
                 }
