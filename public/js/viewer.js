@@ -171,20 +171,17 @@ function loadFloorToCanvas(floor) {
                 obj = new fabric.Rect(objData);
                 break;
             case 'circle':
-                obj = new fabric.Circle({
-                    ...objData,
-                    radius: objData.width / 2
-                });
+                obj = new fabric.Circle(objData);
                 break;
             case 'i-text':
-                obj = new fabric.IText(objData.text, {
-                    ...objData,
-                    selectable: false,
-                    editable: false
-                });
+                obj = new fabric.IText(objData.text || '', objData);
+                break;
+            case 'line':
+                obj = new fabric.Line([objData.x1, objData.y1, objData.x2, objData.y2], objData);
                 break;
             default:
                 if (objData.objectIcon) {
+                    totalSvgObjects++;
                     // Recreate icon from SVG
                     fabric.loadSVGFromString(Icons[objData.objectIcon], (objects, options) => {
                         obj = fabric.util.groupSVGElements(objects, options);
@@ -198,24 +195,27 @@ function loadFloorToCanvas(floor) {
                         });
                         canvas.add(obj);
                         allObjects.push(obj);
+                        svgLoadCount++;
+                        if (svgLoadCount === totalSvgObjects) {
+                            canvas.renderAll(); // Render after all SVGs are loaded
+                        }
                     });
-                    return;
                 }
+                return; // Skip the rest of the loop for this objData if it's an SVG or unknown type
         }
 
-        if (obj) {
-            obj.set({
-                selectable: false,
-                objectLabel: objData.objectLabel,
-                objectTags: objData.objectTags,
-                hoverCursor: objData.objectLabel ? 'pointer' : 'default'
-            });
-            canvas.add(obj);
-            allObjects.push(obj);
-        }
+        // For non-SVG objects
+        obj.selectable = false;
+        obj.hoverCursor = objData.objectLabel ? 'pointer' : 'default';
+        canvas.add(obj);
+        allObjects.push(obj);
     });
 
-    canvas.renderAll();
+    // IMPORTANT: Render canvas after loading objects (for non-SVG objects)
+    // SVGs will trigger their own renderAll when all are loaded.
+    if (totalSvgObjects === 0) { // Only render if no SVGs are pending
+        canvas.renderAll();
+    }
 
     // Re-add "You Are Here" marker if it exists
     if (youAreHereMarker) {
@@ -296,7 +296,7 @@ function selectSearchResult(floor, objectIndex) {
         const obj = allObjects[objectIndex];
         if (obj) {
             highlightObject(obj);
-            showObjectPopup(obj);
+            showObjectDetails(obj);
         }
     }, 100);
 
@@ -353,36 +353,68 @@ function clearHighlights() {
     canvas.renderAll();
 }
 
-// Show object popup
-function showObjectPopup(obj) {
-    if (!obj.objectLabel) return;
-
-    selectedObject = obj;
+// Show object details popup
+function showObjectDetails(obj) {
     const popup = document.getElementById('objectPopup');
+    const label = obj.objectLabel || 'Unnamed';
+    const tags = obj.objectTags || '';
 
-    // Update popup content
-    document.getElementById('popupName').textContent = obj.objectLabel;
+    document.getElementById('popupName').textContent = label;
     document.getElementById('popupFloor').textContent = buildingData.floors[currentFloor].name;
 
-    // Update tags
+    // Show tags
     const tagsContainer = document.getElementById('popupTags');
-    if (obj.objectTags) {
-        const tags = obj.objectTags.split(',').map(tag => tag.trim()).filter(tag => tag);
-        tagsContainer.innerHTML = tags.map(tag =>
-            `<span class="badge">${tag}</span>`
-        ).join('');
-    } else {
-        tagsContainer.innerHTML = '';
+    tagsContainer.innerHTML = '';
+    if (tags) {
+        tags.split(',').forEach(tag => {
+            const badge = document.createElement('span');
+            badge.className = 'badge badge-secondary';
+            badge.textContent = tag.trim();
+            tagsContainer.appendChild(badge);
+        });
     }
 
-    // Position popup
+    // Smart positioning to keep popup within viewport
     const canvasRect = canvas.getElement().getBoundingClientRect();
     const objCenter = obj.getCenterPoint();
     const zoom = canvas.getZoom();
 
-    popup.style.left = `${canvasRect.left + objCenter.x * zoom}px`;
-    popup.style.top = `${canvasRect.top + objCenter.y * zoom}px`;
+    // Calculate object position relative to viewport
+    const objViewportX = canvasRect.left + objCenter.x * zoom;
+    const objViewportY = canvasRect.top + objCenter.y * zoom;
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const popupWidth = 300; // Approximate popup width
+    const popupHeight = 200; // Approximate popup height
+
+    let left = objViewportX + 20; // Default to right of object
+    let top = objViewportY - popupHeight / 2; // Default to vertically centered with object
+
+    // Check if popup goes off right edge
+    if (left + popupWidth > viewportWidth - 20) { // 20px margin from right edge
+        left = objViewportX - popupWidth - 20; // Position to left of object
+        // If it still goes off left edge, center it
+        if (left < 20) {
+            left = (viewportWidth - popupWidth) / 2;
+        }
+    }
+
+    // Check if popup goes off bottom edge
+    if (top + popupHeight > viewportHeight - 20) { // 20px margin from bottom edge
+        top = viewportHeight - popupHeight - 20; // Position at bottom with margin
+    }
+
+    // Ensure popup doesn't go off top edge
+    if (top < 20) { // 20px margin from top edge
+        top = 20;
+    }
+
+    popup.style.left = `${left}px`;
+    popup.style.top = `${top}px`;
     popup.classList.add('visible');
+
+    selectedObject = obj;
 }
 
 // Close popup

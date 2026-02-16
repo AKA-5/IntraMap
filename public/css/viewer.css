@@ -28,9 +28,9 @@ body {
 }
 
 .back-btn {
-    background: var(--gray-100);
-    color: var(--gray-700);
-    padding: 8px 16px;
+    background: var(--primary-blue);
+    color: white;
+    padding: 10px 18px;
     border-radius: var(--radius-md);
     text-decoration: none;
     font-weight: 600;
@@ -39,12 +39,13 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    box-shadow: var(--shadow-sm);
 }
 
 .back-btn:hover {
-    background: var(--gray-200);
-    color: var(--gray-900);
-    transform: translateX(-2px);
+    background: var(--primary-dark);
+    transform: translateX(-3px);
+    box-shadow: var(--shadow-md);
 }
 
 .building-title {
@@ -223,13 +224,18 @@ body {
 
 /* Object Info Popup */
 .object-popup {
-    position: absolute;
+    position: fixed;
+    /* Changed from absolute to fixed for better positioning */
     background: white;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xl);
     padding: var(--spacing-lg);
     min-width: 280px;
     max-width: 400px;
+    max-height: 80vh;
+    /* Limit height to 80% of viewport */
+    overflow-y: auto;
+    /* Make scrollable if content exceeds max-height */
     z-index: 300;
     animation: popupSlideIn 0.3s ease;
     display: none;
