@@ -33,10 +33,13 @@
                 <button class="btn btn-secondary btn-sm" onclick="addNewFloor()" title="Add Floor">+ Floor</button>
             </div>
 
-            <div class="toolbar-right">
-                <button class="btn btn-secondary btn-sm" onclick="loadFromCloud()">📥 Load</button>
-                <button class="btn btn-success btn-sm" onclick="saveToCloud()">☁️ Save to Cloud</button>
-                <button class="btn btn-primary btn-sm" onclick="generateQRCode()">📱 Generate QR</button>
+            <div class="toolbar-actions">
+                <button class="btn btn-secondary" onclick="saveDraft()">💾 Save Draft</button>
+                <button class="btn btn-primary" onclick="saveToCloud()">☁️ Save to Cloud</button>
+                <button class="btn btn-secondary" onclick="loadFromCloud()">📥 Load</button>
+                <button class="btn btn-secondary" onclick="showQRModal()">📱 Generate QR</button>
+                <button class="btn btn-secondary" onclick="fitToScreen()" title="Reset zoom and center canvas">🔍 Fit to
+                    Screen</button>
             </div>
         </div>
 

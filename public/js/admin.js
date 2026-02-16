@@ -1,10 +1,8 @@
 // IntraMap - Admin Editor Logic
 // Handles floor plan creation and editing with Fabric.js
 
+// Global state
 let canvas;
-let currentFloor = 'floor_1';
-let currentTool = 'select';
-let currentColor = '#3B82F6';
 let buildingData = {
     version: '1.0',
     buildingId: '',
@@ -12,10 +10,16 @@ let buildingData = {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     floors: {
-        floor_1: { name: 'Ground Floor', objects: [] }
+        floor_1: {
+            name: 'Ground Floor',
+            objects: []
+        }
     }
 };
-
+let currentFloor = 'floor_1';
+let currentTool = 'select';
+let currentColor = '#3B82F6';
+let copiedObject = null; // For copy/paste functionality
 let autoSaveTimer;
 let selectedObject = null;
 let floorCounter = 2; // For generating unique floor IDs
@@ -42,6 +46,18 @@ function initializeCanvas() {
         backgroundColor: '#FFFFFF',
         selection: true,
         preserveObjectStacking: true
+    });
+
+    // Enable mouse wheel zoom
+    canvas.on('mouse:wheel', function (opt) {
+        const delta = opt.e.deltaY;
+        let zoom = canvas.getZoom();
+        zoom *= 0.999 ** delta;
+        if (zoom > 5) zoom = 5;
+        if (zoom < 0.1) zoom = 0.1;
+        canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+        opt.e.preventDefault();
+        opt.e.stopPropagation();
     });
 
     // Handle object selection
@@ -861,7 +877,7 @@ function removeFloor(floorId) {
 
 // ========== KEYBOARD SHORTCUTS ==========
 
-// Initialize keyboard shortcuts
+// Keyboard shortcuts
 function initializeKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
         // Ignore if typing in input field
@@ -869,8 +885,18 @@ function initializeKeyboardShortcuts() {
             return;
         }
 
+        // Ctrl+C - Copy
+        if (e.ctrlKey && e.key === 'c' && !e.shiftKey) {
+            e.preventDefault();
+            copyObject();
+        }
+        // Ctrl+V - Paste
+        else if (e.ctrlKey && e.key === 'v') {
+            e.preventDefault();
+            pasteObject();
+        }
         // Ctrl+Z - Undo
-        if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+        else if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
             e.preventDefault();
             undo();
         }
@@ -879,10 +905,19 @@ function initializeKeyboardShortcuts() {
             e.preventDefault();
             redo();
         }
-        // Delete - Remove selected object
-        else if (e.key === 'Delete' && selectedObject) {
+        // Delete - Remove selected object (FIXED)
+        else if (e.key === 'Delete') {
             e.preventDefault();
-            deleteSelected();
+            const activeObj = canvas.getActiveObject();
+            if (activeObj) {
+                canvas.remove(activeObj);
+                canvas.renderAll();
+                clearPropertiesPanel();
+                saveState();
+                saveCurrentFloorToData();
+                triggerAutoSave();
+                showToast('Object deleted', 'success');
+            }
         }
         // Escape - Deselect
         else if (e.key === 'Escape') {
@@ -892,6 +927,50 @@ function initializeKeyboardShortcuts() {
             clearPropertiesPanel();
         }
     });
+}
+
+// Copy selected object
+function copyObject() {
+    const activeObj = canvas.getActiveObject();
+    if (activeObj) {
+        activeObj.clone((cloned) => {
+            copiedObject = cloned;
+            showToast('Object copied', 'info');
+        }, ['objectLabel', 'objectTags', 'objectIcon', 'objectLocked']);
+    } else {
+        showToast('No object selected', 'warning');
+    }
+}
+
+// Paste copied object
+function pasteObject() {
+    if (!copiedObject) {
+        showToast('Nothing to paste', 'warning');
+        return;
+    }
+
+    copiedObject.clone((cloned) => {
+        // Offset to avoid overlap
+        cloned.set({
+            left: cloned.left + 20,
+            top: cloned.top + 20
+        });
+        canvas.add(cloned);
+        canvas.setActiveObject(cloned);
+        canvas.renderAll();
+        saveState();
+        saveCurrentFloorToData();
+        triggerAutoSave();
+        showToast('Object pasted', 'success');
+    }, ['objectLabel', 'objectTags', 'objectIcon', 'objectLocked']);
+}
+
+// Fit canvas to screen
+function fitToScreen() {
+    canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+    canvas.setZoom(1);
+    canvas.renderAll();
+    showToast('Reset to fit screen', 'info');
 }
 
 // Save state for undo/redo
