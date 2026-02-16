@@ -30,7 +30,7 @@ function initializeCanvas() {
         if (youAreHereMode) {
             placeYouAreHere(e.pointer.x, e.pointer.y);
         } else if (e.target && e.target.objectLabel) {
-            showObjectPopup(e.target);
+            showObjectDetails(e.target); // Fixed function name
         }
     });
 
@@ -155,13 +155,22 @@ function loadFloorToCanvas(floor) {
     allObjects = [];
 
     if (!buildingData || !buildingData.floors[floor]) {
+        console.error('Floor data not found:', floor);
         return;
     }
 
     const floorData = buildingData.floors[floor];
     document.getElementById('buildingFloor').textContent = floorData.name;
 
-    if (!floorData.objects) return;
+    if (!floorData.objects || floorData.objects.length === 0) {
+        console.log('No objects in floor');
+        canvas.renderAll();
+        return;
+    }
+
+    // Track SVG loading
+    let totalSvgObjects = 0;
+    let svgLoadCount = 0;
 
     floorData.objects.forEach(objData => {
         let obj;
