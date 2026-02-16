@@ -47,6 +47,16 @@ class IntraMapAPI {
         try {
             const sanitizedId = this._sanitizeBuildingId(buildingId);
 
+            // SPECIAL CASE: Load demo building from local file to ensure latest version
+            if (sanitizedId === 'sample') {
+                console.log('Loading demo building from local file...');
+                const response = await fetch('data/demo-building.json');
+                if (!response.ok) {
+                    throw new Error('Failed to load local demo data');
+                }
+                return await response.json();
+            }
+
             const response = await fetch(`${this.baseURL}/api/buildings/${sanitizedId}`, {
                 method: 'GET',
                 headers: {
