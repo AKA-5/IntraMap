@@ -693,11 +693,13 @@ function getCachedBuilding(buildingId) {
     }
 }
 
-// Service Worker registration for PWA
+// Service Worker// SERVICE WORKER KILL SWITCH
+// We are intentionally removing the PWA functionality to fix severe caching issues.
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker registered'))
-            .catch(err => console.log('Service Worker registration failed:', err));
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+            console.log('Unregistering Service Worker to fix cache:', registration);
+            registration.unregister();
+        }
     });
 }
