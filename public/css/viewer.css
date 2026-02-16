@@ -396,6 +396,11 @@ body {
         align-items: stretch;
     }
 
+    .back-btn {
+        align-self: flex-start;
+        margin-bottom: var(--spacing-sm);
+    }
+
     .building-title h1 {
         font-size: 1.25rem;
     }

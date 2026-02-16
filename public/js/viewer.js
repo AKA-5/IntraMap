@@ -190,43 +190,55 @@ function loadFloorToCanvas(floor) {
                 break;
             default:
                 if (objData.objectIcon) {
-                    totalSvgObjects++;
-                    // Recreate icon from SVG
-                    fabric.loadSVGFromString(Icons[objData.objectIcon], (objects, options) => {
-                        obj = fabric.util.groupSVGElements(objects, options);
-                        obj.set({
-                            ...objData,
-                            selectable: false,
-                            objectLabel: objData.objectLabel,
-                            objectTags: objData.objectTags,
-                            objectIcon: objData.objectIcon,
-                            hoverCursor: 'pointer'
+                    // SVG Icon handling
+                    if (Icons[objData.objectIcon]) {
+                        totalSvgObjects++;
+                        fabric.loadSVGFromString(Icons[objData.objectIcon], (objects, options) => {
+                            obj = fabric.util.groupSVGElements(objects, options);
+                            obj.set({
+                                ...objData,
+                                selectable: false,
+                                objectLabel: objData.objectLabel,
+                                objectTags: objData.objectTags,
+                                objectIcon: objData.objectIcon,
+                                hoverCursor: 'pointer'
+                            });
+                            canvas.add(obj);
+                            allObjects.push(obj);
+                            svgLoadCount++;
+                            if (svgLoadCount === totalSvgObjects) {
+                                canvas.renderAll();
+                            }
                         });
-                        canvas.add(obj);
-                        allObjects.push(obj);
-                        svgLoadCount++;
-                        if (svgLoadCount === totalSvgObjects) {
-                            canvas.renderAll(); // Render after all SVGs are loaded
-                        }
-                    });
+                        return; // Async handling, skip synchronous add
+                    }
                 }
-                return; // Skip the rest of the loop for this objData if it's an SVG or unknown type
+                // Default/Fallback: Rect
+                obj = new fabric.Rect(objData);
+                break;
         }
 
-        // For non-SVG objects
-        obj.selectable = false;
-        obj.hoverCursor = objData.objectLabel ? 'pointer' : 'default';
-        canvas.add(obj);
-        allObjects.push(obj);
+        // Add non-SVG object to canvas
+        if (obj) {
+            obj.set({
+                selectable: false,
+                hoverCursor: objData.objectLabel ? 'pointer' : 'default'
+            });
+            canvas.add(obj);
+            allObjects.push(obj);
+        }
     });
 
-    // IMPORTANT: Render canvas after loading objects (for non-SVG objects)
-    // SVGs will trigger their own renderAll when all are loaded.
-    if (totalSvgObjects === 0) { // Only render if no SVGs are pending
+    // IMPORTANT: Render canvas after loading objects
+    if (totalSvgObjects === 0) {
         canvas.renderAll();
     }
 
-    // Re-add "You Are Here" marker if it exists
+    // SAFETY: Force render after a short delay
+    setTimeout(() => canvas.renderAll(), 100);
+    setTimeout(() => canvas.requestRenderAll(), 500);
+
+    // Re-add "You Are Here" marker
     if (youAreHereMarker) {
         canvas.add(youAreHereMarker);
         canvas.bringToFront(youAreHereMarker);
@@ -394,8 +406,15 @@ function showObjectDetails(obj) {
 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const popupWidth = 300; // Approximate popup width
-    const popupHeight = 200; // Approximate popup height
+    // Make visible but transparent to measure dimensions
+    popup.style.opacity = '0';
+    popup.classList.add('visible');
+
+    const popupWidth = popup.offsetWidth || 300;
+    const popupHeight = popup.offsetHeight || 200;
+
+    // Restore opacity
+    popup.style.opacity = '1';
 
     let left = objViewportX + 20; // Default to right of object
     let top = objViewportY - popupHeight / 2; // Default to vertically centered with object
