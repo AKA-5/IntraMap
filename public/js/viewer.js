@@ -77,6 +77,7 @@ function initializeControls() {
 }
 
 // Load building data from API
+// Load building data from API
 async function loadBuildingData() {
     const buildingId = api.getBuildingIdFromURL();
 
@@ -89,8 +90,62 @@ async function loadBuildingData() {
         // Show loading
         document.getElementById('loadingOverlay').classList.remove('hidden');
 
+        // FORCE RELOAD for demo/sample to ensure fresh data
+        if (buildingId === 'sample') {
+            console.log('Forcing fresh load for sample...');
+            localStorage.removeItem(`intramap_building_${buildingId}`);
+        }
+
         // Load from API
         buildingData = await api.loadBuilding(buildingId);
+
+        // ... rest of function ...
+
+        // ... inside showObjectDetails ...
+
+        // Smart positioning
+        const canvasRect = canvas.getElement().getBoundingClientRect();
+        const objCenter = obj.getCenterPoint();
+        const zoom = canvas.getZoom();
+
+        const objViewportX = canvasRect.left + objCenter.x * zoom;
+        const objViewportY = canvasRect.top + objCenter.y * zoom;
+
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // Measure popup
+        popup.style.opacity = '0';
+        popup.classList.add('visible');
+        const popupWidth = popup.offsetWidth || 300;
+        const popupHeight = popup.offsetHeight || 200;
+        popup.style.opacity = '1';
+
+        let left = objViewportX + 20;
+        let top = objViewportY - popupHeight / 2;
+
+        // PREFER ABOVE if in bottom half
+        if (objViewportY > viewportHeight * 0.6) {
+            top = objViewportY - popupHeight - 20; // Position above logic
+            // Center horizontally if positioned above
+            left = objViewportX - popupWidth / 2;
+        } else {
+            // Standard side positioning logic
+            if (left + popupWidth > viewportWidth - 20) {
+                left = objViewportX - popupWidth - 20;
+            }
+        }
+
+        // Final boundary checks
+        if (left < 20) left = 20;
+        if (left + popupWidth > viewportWidth - 20) left = viewportWidth - popupWidth - 20;
+
+        if (top < 20) top = 20;
+        if (top + popupHeight > viewportHeight - 20) top = viewportHeight - popupHeight - 20;
+
+        popup.style.left = `${left}px`;
+        popup.style.top = `${top}px`;
+        popup.classList.add('visible');
 
         // Update UI
         document.getElementById('buildingName').textContent = buildingData.name;
@@ -406,6 +461,7 @@ function showObjectDetails(obj) {
 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
+
     // Make visible but transparent to measure dimensions
     popup.style.opacity = '0';
     popup.classList.add('visible');
@@ -417,26 +473,27 @@ function showObjectDetails(obj) {
     popup.style.opacity = '1';
 
     let left = objViewportX + 20; // Default to right of object
-    let top = objViewportY - popupHeight / 2; // Default to vertically centered with object
+    let top = objViewportY - popupHeight / 2; // Default to vertically centered
 
-    // Check if popup goes off right edge
-    if (left + popupWidth > viewportWidth - 20) { // 20px margin from right edge
-        left = objViewportX - popupWidth - 20; // Position to left of object
-        // If it still goes off left edge, center it
-        if (left < 20) {
-            left = (viewportWidth - popupWidth) / 2;
+    // STRATEGY: If object is in bottom half of screen, position popup ABOVE it
+    if (objViewportY > viewportHeight * 0.6) {
+        top = objViewportY - (obj.height * zoom / 2) - popupHeight - 10;
+        left = objViewportX - (popupWidth / 2);
+    }
+    // Otherwise position to the RIGHT (or LEFT if no space)
+    else {
+        // Check right edge
+        if (left + popupWidth > viewportWidth - 20) {
+            left = objViewportX - popupWidth - 20; // Flip to left
         }
     }
 
-    // Check if popup goes off bottom edge
-    if (top + popupHeight > viewportHeight - 20) { // 20px margin from bottom edge
-        top = viewportHeight - popupHeight - 20; // Position at bottom with margin
-    }
+    // Final Clamp to Viewport to ensure NO CUTOFF
+    if (left < 10) left = 10;
+    if (left + popupWidth > viewportWidth - 10) left = viewportWidth - popupWidth - 10;
 
-    // Ensure popup doesn't go off top edge
-    if (top < 20) { // 20px margin from top edge
-        top = 20;
-    }
+    if (top < 10) top = 10;
+    if (top + popupHeight > viewportHeight - 10) top = viewportHeight - popupHeight - 10;
 
     popup.style.left = `${left}px`;
     popup.style.top = `${top}px`;
