@@ -77,9 +77,26 @@ function initializeControls() {
 }
 
 // Load building data from API
-// Load building data from API
+// Load building data
+const urlParams = new URLSearchParams(window.location.search);
+const buildingId = urlParams.get('building');
+
+// DEBUG: FORCE UNREGISTER SERVICE WORKERS to solve caching issues
+if (navigator.serviceWorker) {
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+            console.log('Unregistering Service Worker:', registration);
+            registration.unregister();
+        }
+    });
+}
+// END DEBUG
+
+// Initialize API
+const api = new IntraMapAPI();
 async function loadBuildingData() {
-    const buildingId = api.getBuildingIdFromURL();
+    // The original line `const buildingId = api.getBuildingIdFromURL();` is replaced by the global `buildingId`
+    // and the `api` initialization is moved outside the function.
 
     if (!buildingId) {
         showError('No building ID provided in URL');
