@@ -2,7 +2,7 @@
 // Handles floor plan creation and editing with Fabric.js
 
 let canvas;
-let currentFloor = 'ground';
+let currentFloor = 'floor_1';
 let currentTool = 'select';
 let currentColor = '#3B82F6';
 let buildingData = {
@@ -12,14 +12,17 @@ let buildingData = {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     floors: {
-        ground: { name: 'Ground Floor', objects: [] },
-        first: { name: 'First Floor', objects: [] },
-        second: { name: 'Second Floor', objects: [] }
+        floor_1: { name: 'Ground Floor', objects: [] }
     }
 };
 
 let autoSaveTimer;
 let selectedObject = null;
+let floorCounter = 2; // For generating unique floor IDs
+let undoStack = [];
+let redoStack = [];
+let isDrawingLine = false;
+let lineStartPoint = null;
 
 // Initialize editor on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeToolbar();
     initializeIconGrid();
     initializeColorPickers();
+    initializeKeyboardShortcuts();
+    renderFloorTabs();
     loadDraftFromLocalStorage();
     startAutoSave();
 });
@@ -60,12 +65,7 @@ function initializeCanvas() {
 
 // Initialize toolbar event listeners
 function initializeToolbar() {
-    // Floor tabs
-    document.querySelectorAll('.floor-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            switchFloor(tab.dataset.floor);
-        });
-    });
+    // Floor tabs will be handled by renderFloorTabs() function
 
     // Shape tools
     document.querySelectorAll('.tool-btn').forEach(btn => {
@@ -80,9 +80,11 @@ function initializeToolbar() {
         triggerAutoSave();
     });
 
-    // Canvas click for adding shapes
+    // Canvas click for adding shapes and line drawing
     canvas.on('mouse:down', (e) => {
-        if (!e.target && currentTool !== 'select') {
+        if (currentTool === 'line') {
+            handleLineDrawing(e);
+        } else if (!e.target && currentTool !== 'select') {
             addShapeAtPosition(e.pointer.x, e.pointer.y);
         }
     });
@@ -211,6 +213,7 @@ function addShapeAtPosition(x, y) {
         canvas.add(shape);
         canvas.setActiveObject(shape);
         canvas.renderAll();
+        saveState();
         saveCurrentFloorToData();
         triggerAutoSave();
     }
@@ -355,6 +358,10 @@ function handleObjectSelection(e) {
 function showPropertiesPanel(obj) {
     const panel = document.getElementById('propertiesPanel');
 
+    const currentStrokeWidth = obj.strokeWidth || 2;
+    const currentOpacity = obj.opacity !== undefined ? obj.opacity : 1;
+    const currentStrokeDashArray = obj.strokeDashArray ? 'dashed' : 'solid';
+
     panel.innerHTML = `
     <div class="property-group">
       <label class="property-label">Name</label>
@@ -367,8 +374,27 @@ function showPropertiesPanel(obj) {
     </div>
     
     <div class="property-group">
-      <label class="property-label">Color</label>
+      <label class="property-label">Fill Color</label>
       <input type="color" class="property-input" id="propColor" value="${obj.fill || '#3B82F6'}">
+    </div>
+    
+    <div class="property-group">
+      <label class="property-label">Border Width: <span id="strokeWidthValue">${currentStrokeWidth}px</span></label>
+      <input type="range" class="property-input" id="propStrokeWidth" min="0" max="20" step="1" value="${currentStrokeWidth}">
+    </div>
+    
+    <div class="property-group">
+      <label class="property-label">Border Style</label>
+      <select class="property-input" id="propStrokeStyle">
+        <option value="solid" ${currentStrokeDashArray === 'solid' ? 'selected' : ''}>Solid</option>
+        <option value="dashed" ${currentStrokeDashArray === 'dashed' ? 'selected' : ''}>Dashed</option>
+        <option value="dotted" ${currentStrokeDashArray === 'dotted' ? 'selected' : ''}>Dotted</option>
+      </select>
+    </div>
+    
+    <div class="property-group">
+      <label class="property-label">Opacity: <span id="opacityValue">${Math.round(currentOpacity * 100)}%</span></label>
+      <input type="range" class="property-input" id="propOpacity" min="0" max="100" step="5" value="${currentOpacity * 100}">
     </div>
     
     <div class="property-group">
@@ -407,6 +433,38 @@ function showPropertiesPanel(obj) {
 
     document.getElementById('propColor').addEventListener('input', (e) => {
         obj.set('fill', e.target.value);
+        canvas.renderAll();
+        saveCurrentFloorToData();
+        triggerAutoSave();
+    });
+
+    document.getElementById('propStrokeWidth').addEventListener('input', (e) => {
+        const width = parseInt(e.target.value);
+        document.getElementById('strokeWidthValue').textContent = width + 'px';
+        obj.set('strokeWidth', width);
+        canvas.renderAll();
+        saveCurrentFloorToData();
+        triggerAutoSave();
+    });
+
+    document.getElementById('propStrokeStyle').addEventListener('change', (e) => {
+        const style = e.target.value;
+        if (style === 'solid') {
+            obj.set('strokeDashArray', null);
+        } else if (style === 'dashed') {
+            obj.set('strokeDashArray', [10, 5]);
+        } else if (style === 'dotted') {
+            obj.set('strokeDashArray', [2, 3]);
+        }
+        canvas.renderAll();
+        saveCurrentFloorToData();
+        triggerAutoSave();
+    });
+
+    document.getElementById('propOpacity').addEventListener('input', (e) => {
+        const opacity = parseInt(e.target.value) / 100;
+        document.getElementById('opacityValue').textContent = Math.round(opacity * 100) + '%';
+        obj.set('opacity', opacity);
         canvas.renderAll();
         saveCurrentFloorToData();
         triggerAutoSave();
@@ -663,3 +721,270 @@ function showToast(message, type = 'info') {
         toast.remove();
     }, 3000);
 }
+
+// ========== NEW FUNCTIONS FOR DYNAMIC FLOORS ==========
+
+// Render floor tabs dynamically
+function renderFloorTabs() {
+    const container = document.getElementById('floorTabsContainer');
+    container.innerHTML = '';
+
+    Object.keys(buildingData.floors).forEach(floorId => {
+        const floor = buildingData.floors[floorId];
+        const tab = document.createElement('button');
+        tab.className = 'floor-tab' + (floorId === currentFloor ? ' active' : '');
+        tab.dataset.floor = floorId;
+        tab.textContent = floor.name;
+
+        // Click to switch floor
+        tab.addEventListener('click', () => switchFloor(floorId));
+
+        // Right-click for options
+        tab.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showFloorContextMenu(floorId, e.clientX, e.clientY);
+        });
+
+        container.appendChild(tab);
+    });
+}
+
+// Add new floor
+function addNewFloor() {
+    const floorName = prompt('Enter floor name:', `Floor ${floorCounter}`);
+    if (!floorName) return;
+
+    const floorId = `floor_${floorCounter++}`;
+    buildingData.floors[floorId] = {
+        name: floorName,
+        objects: []
+    };
+
+    renderFloorTabs();
+    switchFloor(floorId);
+    saveState();
+    triggerAutoSave();
+}
+
+// Show floor context menu
+function showFloorContextMenu(floorId, x, y) {
+    // Remove existing menu if any
+    const existingMenu = document.querySelector('.floor-context-menu');
+    if (existingMenu) existingMenu.remove();
+
+    const menu = document.createElement('div');
+    menu.className = 'floor-context-menu';
+    menu.style.position = 'fixed';
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+    menu.style.background = 'white';
+    menu.style.border = '1px solid #ccc';
+    menu.style.borderRadius = '4px';
+    menu.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+    menu.style.zIndex = '10000';
+    menu.style.minWidth = '120px';
+
+    const renameBtn = document.createElement('button');
+    renameBtn.textContent = '✏️ Rename';
+    renameBtn.style.cssText = 'display:block;width:100%;padding:8px 12px;border:none;background:none;text-align:left;cursor:pointer;';
+    renameBtn.onmouseover = () => renameBtn.style.background = '#f3f4f6';
+    renameBtn.onmouseout = () => renameBtn.style.background = 'none';
+    renameBtn.onclick = () => {
+        renameFloor(floorId);
+        menu.remove();
+    };
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '🗑️ Delete';
+    deleteBtn.style.cssText = 'display:block;width:100%;padding:8px 12px;border:none;background:none;text-align:left;cursor:pointer;color:#ef4444;';
+    deleteBtn.onmouseover = () => deleteBtn.style.background = '#fef2f2';
+    deleteBtn.onmouseout = () => deleteBtn.style.background = 'none';
+    deleteBtn.onclick = () => {
+        removeFloor(floorId);
+        menu.remove();
+    };
+
+    menu.appendChild(renameBtn);
+
+    // Only show delete if there's more than one floor
+    if (Object.keys(buildingData.floors).length > 1) {
+        menu.appendChild(deleteBtn);
+    }
+
+    document.body.appendChild(menu);
+
+    // Close menu when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu() {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        });
+    }, 0);
+}
+
+// Rename floor
+function renameFloor(floorId) {
+    const currentName = buildingData.floors[floorId].name;
+    const newName = prompt('Enter new floor name:', currentName);
+
+    if (newName && newName !== currentName) {
+        buildingData.floors[floorId].name = newName;
+        renderFloorTabs();
+        saveState();
+        triggerAutoSave();
+    }
+}
+
+// Remove floor
+function removeFloor(floorId) {
+    if (Object.keys(buildingData.floors).length === 1) {
+        alert('Cannot delete the last floor');
+        return;
+    }
+
+    if (!confirm(`Delete "${buildingData.floors[floorId].name}"? This cannot be undone.`)) {
+        return;
+    }
+
+    delete buildingData.floors[floorId];
+
+    // Switch to another floor if current floor was deleted
+    if (currentFloor === floorId) {
+        currentFloor = Object.keys(buildingData.floors)[0];
+        loadFloorToCanvas(currentFloor);
+    }
+
+    renderFloorTabs();
+    saveState();
+    triggerAutoSave();
+}
+
+// ========== KEYBOARD SHORTCUTS ==========
+
+// Initialize keyboard shortcuts
+function initializeKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        // Ignore if typing in input field
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        // Ctrl+Z - Undo
+        if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+            e.preventDefault();
+            undo();
+        }
+        // Ctrl+Y or Ctrl+Shift+Z - Redo
+        else if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+            e.preventDefault();
+            redo();
+        }
+        // Delete - Remove selected object
+        else if (e.key === 'Delete' && selectedObject) {
+            e.preventDefault();
+            deleteSelected();
+        }
+        // Escape - Deselect
+        else if (e.key === 'Escape') {
+            e.preventDefault();
+            canvas.discardActiveObject();
+            canvas.renderAll();
+            clearPropertiesPanel();
+        }
+    });
+}
+
+// Save state for undo/redo
+function saveState() {
+    saveCurrentFloorToData();
+    const state = JSON.parse(JSON.stringify(buildingData));
+    undoStack.push(state);
+
+    // Limit undo stack to 50 states
+    if (undoStack.length > 50) {
+        undoStack.shift();
+    }
+
+    // Clear redo stack when new action is performed
+    redoStack = [];
+}
+
+// Undo
+function undo() {
+    if (undoStack.length === 0) {
+        showToast('Nothing to undo', 'info');
+        return;
+    }
+
+    // Save current state to redo stack
+    const currentState = JSON.parse(JSON.stringify(buildingData));
+    redoStack.push(currentState);
+
+    // Restore previous state
+    buildingData = undoStack.pop();
+    document.getElementById('buildingName').value = buildingData.name || '';
+    renderFloorTabs();
+    loadFloorToCanvas(currentFloor);
+    showToast('Undo', 'success');
+}
+
+// Redo
+function redo() {
+    if (redoStack.length === 0) {
+        showToast('Nothing to redo', 'info');
+        return;
+    }
+
+    // Save current state to undo stack
+    const currentState = JSON.parse(JSON.stringify(buildingData));
+    undoStack.push(currentState);
+
+    // Restore redo state
+    buildingData = redoStack.pop();
+    document.getElementById('buildingName').value = buildingData.name || '';
+    renderFloorTabs();
+    loadFloorToCanvas(currentFloor);
+    showToast('Redo', 'success');
+}
+
+// ========== LINE DRAWING TOOL ==========
+
+// Handle line drawing
+function handleLineDrawing(e) {
+    if (!isDrawingLine) {
+        // Start drawing line
+        isDrawingLine = true;
+        lineStartPoint = { x: e.pointer.x, y: e.pointer.y };
+
+        // Visual feedback
+        showToast('Click to set end point', 'info');
+    } else {
+        // Finish drawing line
+        const line = new fabric.Line([
+            lineStartPoint.x,
+            lineStartPoint.y,
+            e.pointer.x,
+            e.pointer.y
+        ], {
+            stroke: currentColor,
+            strokeWidth: 3,
+            selectable: true,
+            objectLabel: '',
+            objectTags: '',
+            objectLocked: false
+        });
+
+        canvas.add(line);
+        canvas.setActiveObject(line);
+        canvas.renderAll();
+
+        // Reset line drawing state
+        isDrawingLine = false;
+        lineStartPoint = null;
+
+        saveState();
+        saveCurrentFloorToData();
+        triggerAutoSave();
+    }
+}
+

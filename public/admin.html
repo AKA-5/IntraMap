@@ -27,11 +27,10 @@
             </div>
 
             <div class="toolbar-center">
-                <div class="floor-tabs">
-                    <button class="floor-tab active" data-floor="ground">Ground</button>
-                    <button class="floor-tab" data-floor="first">First</button>
-                    <button class="floor-tab" data-floor="second">Second</button>
+                <div class="floor-tabs" id="floorTabsContainer">
+                    <!-- Floor tabs will be dynamically generated -->
                 </div>
+                <button class="btn btn-secondary btn-sm" onclick="addNewFloor()" title="Add Floor">+ Floor</button>
             </div>
 
             <div class="toolbar-right">
@@ -49,6 +48,10 @@
                 <div class="sidebar-section">
                     <h3>Shapes</h3>
                     <div class="tool-grid">
+                        <button class="tool-btn" data-tool="select">
+                            <span class="tool-icon">↖</span>
+                            <span>Select</span>
+                        </button>
                         <button class="tool-btn" data-tool="rect">
                             <span class="tool-icon">▭</span>
                             <span>Rectangle</span>
@@ -57,13 +60,13 @@
                             <span class="tool-icon">●</span>
                             <span>Circle</span>
                         </button>
+                        <button class="tool-btn" data-tool="line">
+                            <span class="tool-icon">─</span>
+                            <span>Wall/Line</span>
+                        </button>
                         <button class="tool-btn" data-tool="text">
                             <span class="tool-icon">T</span>
                             <span>Text</span>
-                        </button>
-                        <button class="tool-btn" data-tool="select">
-                            <span class="tool-icon">↖</span>
-                            <span>Select</span>
                         </button>
                     </div>
                 </div>

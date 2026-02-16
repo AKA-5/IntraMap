@@ -96,6 +96,9 @@ async function loadBuildingData() {
         document.getElementById('buildingName').textContent = buildingData.name;
         document.title = `${buildingData.name} - IntraMap`;
 
+        // Populate floor selector dynamically
+        populateFloorSelector();
+
         // Load initial floor
         loadFloorToCanvas(currentFloor);
 
@@ -120,6 +123,29 @@ async function loadBuildingData() {
             showError('Failed to load building: ' + error.message);
         }
     }
+}
+
+// Populate floor selector dynamically
+function populateFloorSelector() {
+    const selector = document.getElementById('floorSelector');
+    selector.innerHTML = '';
+
+    // Get first floor as default if currentFloor doesn't exist
+    const floorKeys = Object.keys(buildingData.floors);
+    if (!buildingData.floors[currentFloor]) {
+        currentFloor = floorKeys[0];
+    }
+
+    floorKeys.forEach(floorId => {
+        const floor = buildingData.floors[floorId];
+        const option = document.createElement('option');
+        option.value = floorId;
+        option.textContent = floor.name;
+        if (floorId === currentFloor) {
+            option.selected = true;
+        }
+        selector.appendChild(option);
+    });
 }
 
 // Load floor data to canvas

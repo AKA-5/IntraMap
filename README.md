@@ -10,7 +10,10 @@ A production-ready web application for creating and sharing interactive indoor f
 
 ### For Building Owners (Admin)
 - 🎨 **Drag-and-drop floor plan editor** with Fabric.js
-- 🏢 **Multi-floor support** (Ground, First, Second floors)
+- 🏢 **Dynamic floor management** - Add, rename, delete unlimited floors with custom names
+- ⌨️ **Keyboard shortcuts** - Ctrl+Z (undo), Ctrl+Y (redo), Delete, Escape
+- 📏 **Wall/Line drawing tool** - Two-click interaction for boundaries
+- 🎨 **Advanced styling controls** - Border width (0-20px), style (solid/dashed/dotted), opacity (0-100%)
 - 🎯 **Pre-made icons** for common places (restaurants, restrooms, exits, etc.)
 - 🎨 **Color-coded categories** (Blue=Food, Green=Restrooms, Red=Exits, etc.)
 - 💾 **Auto-save** to localStorage every 10 seconds
@@ -18,6 +21,7 @@ A production-ready web application for creating and sharing interactive indoor f
 - 📱 **QR code generation** for instant sharing
 - 🔒 **Lock/unlock objects** to prevent accidental edits
 - 📐 **Layer controls** (bring to front, send to back)
+- ↩️ **Undo/Redo** with 50-state history
 
 ### For Visitors (Viewer)
 - 📱 **Mobile-first responsive design**
@@ -117,22 +121,37 @@ IntraMap/
 
 1. Open `admin.html`
 2. Enter your building name (e.g., "Centaurus Mall")
-3. Select a floor tab (Ground, First, Second)
-4. Use shape tools or icon library to draw your floor plan
+3. Start with default "Ground Floor" or add custom floors:
+   - Click **"+ Floor"** to add new floors (Basement, Mezzanine, Rooftop, etc.)
+   - Right-click floor tabs to rename or delete
+4. Use drawing tools:
+   - **Shapes:** Rectangle, Circle for rooms and areas
+   - **Wall/Line:** Click twice to draw boundaries
+   - **Text:** Add labels and descriptions
+   - **Icons:** Use pre-made icons from library
 5. Click objects to edit properties:
    - Name (e.g., "Food Court")
    - Tags (e.g., "food, restaurant, pizza")
-   - Color
-6. Click "Save to Cloud" to store your floor plan
-7. Click "Generate QR" to create a shareable QR code
+   - Fill Color
+   - Border Width (0-20px slider)
+   - Border Style (Solid, Dashed, Dotted)
+   - Opacity (0-100%)
+6. Use keyboard shortcuts:
+   - **Ctrl+Z** - Undo
+   - **Ctrl+Y** - Redo
+   - **Delete** - Remove selected object
+   - **Escape** - Deselect
+7. Click "Save to Cloud" to store your floor plan
+8. Click "Generate QR" to create a shareable QR code
 
 ### Viewing a Floor Plan
 
 1. Scan the QR code or visit `viewer.html?building=your-building-id`
-2. Search for places using the search bar
-3. Click "You Are Here" and tap on the map to mark your location
-4. Click any object to see details
-5. Click "Get Directions" to see a visual path
+2. Use floor selector to switch between floors
+3. Search for places using the search bar
+4. Click "You Are Here" and tap on the map to mark your location
+5. Click any object to see details
+6. Click "Get Directions" to see a visual path
 
 ## 🎨 Icon Library
 

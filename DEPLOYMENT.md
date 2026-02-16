@@ -226,8 +226,9 @@ Then visit: `https://intramap.vercel.app/viewer.html?building=sample-mall`
 ## 🎉 You're Done!
 
 Your IntraMap is now live and accessible at:
-- **Frontend**: `https://intramap.vercel.app`
-- **Backend**: `https://intramap-api.your-subdomain.workers.dev`
+- **Frontend**: `https://intra-map-six.vercel.app`
+- **Backend**: `https://intramap-api.kaleempk555.workers.dev`
+
 
 ### Next Steps
 
