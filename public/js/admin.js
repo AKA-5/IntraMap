@@ -87,8 +87,32 @@ function initializeCanvas() {
     canvas.on('selection:updated', handleObjectSelection);
     canvas.on('selection:cleared', clearPropertiesPanel);
 
-    // Handle object modifications
+    // Save state before object modification for undo
+    canvas.on('object:moving', () => {
+        // This fires once when movement starts
+        if (!canvas._undoSavedForCurrentAction) {
+            saveState();
+            canvas._undoSavedForCurrentAction = true;
+        }
+    });
+    
+    canvas.on('object:scaling', (e) => {
+        if (!canvas._undoSavedForCurrentAction) {
+            saveState();
+            canvas._undoSavedForCurrentAction = true;
+        }
+    });
+    
+    canvas.on('object:rotating', (e) => {
+        if (!canvas._undoSavedForCurrentAction) {
+            saveState();
+            canvas._undoSavedForCurrentAction = true;
+        }
+    });
+
+    // Handle object modifications (after modification completes)
     canvas.on('object:modified', () => {
+        canvas._undoSavedForCurrentAction = false; // Reset flag
         saveCurrentFloorToData();
         triggerAutoSave();
     });
@@ -189,13 +213,19 @@ function selectTool(tool) {
         btn.classList.toggle('active', btn.dataset.tool === tool);
     });
 
-    // Update cursor
+    // Update cursor and selection mode
     if (tool === 'select') {
         canvas.defaultCursor = 'default';
         canvas.selection = true;
+        canvas.forEachObject(obj => {
+            obj.selectable = true;
+        });
     } else {
         canvas.defaultCursor = 'crosshair';
         canvas.selection = false;
+        // Deselect any active objects when switching to non-select tool
+        canvas.discardActiveObject();
+        canvas.renderAll();
     }
 }
 
@@ -241,6 +271,9 @@ function addShapeAtPosition(x, y) {
     }
 
     if (shape) {
+        // Save state BEFORE adding shape for undo
+        saveState();
+        
         // Add custom properties
         shape.set({
             objectLabel: '',
@@ -251,7 +284,6 @@ function addShapeAtPosition(x, y) {
         canvas.add(shape);
         canvas.setActiveObject(shape);
         canvas.renderAll();
-        saveState();
         saveCurrentFloorToData();
         triggerAutoSave();
         
@@ -263,6 +295,9 @@ function addShapeAtPosition(x, y) {
 // Add icon to canvas
 function addIcon(iconName) {
     const meta = IconMetadata[iconName];
+    
+    // Save state BEFORE adding icon for undo
+    saveState();
 
     // Create icon as SVG path
     fabric.loadSVGFromString(Icons[iconName], (objects, options) => {
@@ -614,18 +649,39 @@ function saveDraftToLocalStorage() {
     localStorage.setItem('intramap_draft', JSON.stringify(buildingData));
 }
 
+// Manual save draft (called by Save Draft button)
+function saveDraft() {
+    saveDraftToLocalStorage();
+    showToast('Draft saved to browser', 'success');
+}
+
 function loadDraftFromLocalStorage() {
     const draft = localStorage.getItem('intramap_draft');
     if (draft) {
         try {
             buildingData = JSON.parse(draft);
             document.getElementById('buildingName').value = buildingData.name || '';
+            updateFloorCounter();
             loadFloorToCanvas(currentFloor);
             updateAutoSaveIndicator('saved');
         } catch (e) {
             console.error('Failed to load draft:', e);
         }
     }
+}
+
+// Update floor counter based on existing floors
+function updateFloorCounter() {
+    const floorIds = Object.keys(buildingData.floors);
+    const maxFloorNum = floorIds.reduce((max, floorId) => {
+        const match = floorId.match(/floor_(\d+)/);
+        if (match) {
+            const num = parseInt(match[1]);
+            return num > max ? num : max;
+        }
+        return max;
+    }, 0);
+    floorCounter = maxFloorNum + 1;
 }
 
 function updateAutoSaveIndicator(status) {
@@ -706,6 +762,9 @@ async function loadDemoData() {
         // Set the building name
         document.getElementById('buildingName').value = data.name;
         
+        // Update floor counter based on loaded data
+        updateFloorCounter();
+        
         // Render floor tabs and load first floor
         renderFloorTabs();
         
@@ -722,7 +781,8 @@ async function loadDemoData() {
 }
 
 // Generate QR code
-function generateQRCode() {
+// Generate and show QR code modal
+function showQRModal() {
     const buildingName = document.getElementById('buildingName').value.trim();
 
     if (!buildingName) {
@@ -831,6 +891,9 @@ function addNewFloor() {
     const floorName = prompt('Enter floor name:', `Floor ${floorCounter}`);
     if (!floorName) return;
 
+    // Save state BEFORE adding new floor for undo
+    saveState();
+
     const floorId = `floor_${floorCounter++}`;
     buildingData.floors[floorId] = {
         name: floorName,
@@ -839,7 +902,6 @@ function addNewFloor() {
 
     renderFloorTabs();
     switchFloor(floorId);
-    saveState();
     triggerAutoSave();
 }
 
@@ -981,10 +1043,11 @@ function initializeKeyboardShortcuts() {
             e.preventDefault();
             const activeObj = canvas.getActiveObject();
             if (activeObj) {
+                // Save state BEFORE deletion for undo
+                saveState();
                 canvas.remove(activeObj);
                 canvas.renderAll();
                 clearPropertiesPanel();
-                saveState();
                 saveCurrentFloorToData();
                 triggerAutoSave();
                 showToast('Object deleted', 'success');
