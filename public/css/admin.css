@@ -322,6 +322,21 @@ body {
     border-top: 1px solid var(--gray-200);
 }
 
+/* QR Code Centering */
+#qrCodeContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: var(--spacing-lg) 0;
+    min-height: 256px;
+}
+
+#qrCodeContainer canvas,
+#qrCodeContainer img {
+    display: block;
+    margin: 0 auto;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
 
@@ -358,28 +373,335 @@ body {
 }
 
 @media (max-width: 768px) {
-
-    .sidebar-left,
-    .sidebar-right {
-        width: 100%;
-        max-width: 320px;
+    /* Toolbar - Stack Sections Vertically */
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: var(--spacing-sm);
+        height: auto;
+        min-height: auto;
     }
 
     .toolbar-left,
     .toolbar-center,
     .toolbar-right {
         width: 100%;
+        justify-content: center;
+        padding: var(--spacing-xs) 0;
+        border-bottom: 1px solid var(--gray-200);
     }
 
+    .toolbar-right {
+        border-bottom: none;
+    }
+
+    .toolbar-divider {
+        display: none;  /* Hide dividers on mobile */
+    }
+
+    /* Building Name Input - Full Width */
+    .building-name-input {
+        max-width: 100%;
+        min-width: 150px;
+    }
+
+    /* Floor Tabs - Scrollable Horizontal */
     .floor-tabs {
         width: 100%;
-        justify-content: space-between;
+        justify-content: flex-start;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: var(--spacing-xs);
     }
 
+    .floor-tab {
+        flex-shrink: 0;
+        min-width: 100px;
+    }
+
+    /* Buttons - Touch Friendly */
+    .btn,
+    .btn-sm {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    /* Sidebars - Full Width Overlay */
+    .sidebar-left,
+    .sidebar-right {
+        width: 100%;
+        max-width: 100%;
+        height: calc(100vh - 200px);  /* Account for taller toolbar */
+        overflow-y: auto;
+    }
+
+    /* Sidebar Sections - More Compact */
+    .sidebar-section {
+        padding: var(--spacing-sm);
+    }
+
+    .sidebar-section h3 {
+        font-size: 14px;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    /* Tool Grid - 3 Columns on Mobile */
+    .tool-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-xs);
+    }
+
+    .tool-btn {
+        min-height: 60px;
+        padding: var(--spacing-xs);
+    }
+
+    .tool-icon {
+        font-size: 20px;
+    }
+
+    .tool-btn span:last-child {
+        font-size: 11px;
+    }
+
+    /* Icon Grid - 4 Columns on Mobile */
+    .icon-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-xs);
+    }
+
+    .icon-item {
+        min-height: 50px;
+        padding: var(--spacing-xs);
+    }
+
+    /* Color Presets - 2 Rows */
+    .color-presets {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-xs);
+    }
+
+    .color-preset {
+        width: 100%;
+        height: 44px;
+    }
+
+    /* Canvas Container - Adjust for Taller Toolbar */
+    .canvas-container {
+        height: calc(100vh - 200px);
+    }
+
+    /* Canvas Controls - Bottom Bar */
     .canvas-controls {
-        bottom: var(--spacing-md);
-        right: var(--spacing-md);
-        left: var(--spacing-md);
+        position: fixed;
+        bottom: var(--spacing-sm);
+        right: var(--spacing-sm);
+        left: var(--spacing-sm);
         justify-content: center;
+        flex-direction: row;
+        gap: var(--spacing-xs);
+        background: white;
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-xl);
+    }
+
+    .canvas-controls button {
+        flex: 1;
+        min-height: 44px;
+        font-size: 13px;
+    }
+
+    /* Properties Panel - Scrollable */
+    .properties {
+        max-height: calc(100vh - 250px);
+        overflow-y: auto;
+    }
+
+    .property-group {
+        padding: var(--spacing-sm);
+    }
+
+    /* Form Controls - Touch Friendly */
+    .form-control,
+    .form-select,
+    input[type="text"],
+    input[type="number"],
+    input[type="color"],
+    select {
+        min-height: 44px;
+        font-size: 15px;
+        padding: 10px 12px;
+    }
+
+    /* Modals - More Mobile Friendly */
+    .modal {
+        max-width: 95%;
+        margin: var(--spacing-sm);
+    }
+
+    .modal-header h3 {
+        font-size: 1.1rem;
+    }
+
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+
+    /* Help Popup - Scrollable on Small Screens */
+    .help-popup {
+        max-width: 95%;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    .help-close-btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* QR Code Container - Ensure Visibility */
+    #qrCodeContainer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: var(--spacing-md);
+    }
+
+    #qrCodeContainer canvas,
+    #qrCodeContainer img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Toast Messages - Bottom Position */
+    .toast {
+        bottom: 80px;  /* Above canvas controls */
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 90%;
+    }
+
+    /* Main Content - Adjust for Mobile */
+    .main-content {
+        height: calc(100vh - 200px);
+    }
+
+    /* Back Button - More Prominent */
+    .btn-icon {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* Help Overlay Styles */
+.help-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.help-popup {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    max-width: 450px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    animation: slideUp 0.3s ease;
+}
+
+.help-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--gray-500);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+}
+
+.help-close-btn:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+}
+
+.help-popup h3 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--gray-900);
+    font-size: 1.25rem;
+    padding-right: 30px;
+}
+
+.help-shortcuts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.help-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-xs) 0;
+}
+
+.help-key {
+    font-family: 'Courier New', monospace;
+    background: var(--gray-100);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-300);
+    font-size: 0.9rem;
+    min-width: 90px;
+    text-align: center;
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.help-desc {
+    color: var(--gray-700);
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
