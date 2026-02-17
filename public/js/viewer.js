@@ -75,19 +75,35 @@ function initializeCanvas() {
         }
     });
 
-    // Mouse wheel zoom
+    // Mouse wheel: Ctrl = Zoom, Shift = Horizontal scroll, Default = Vertical scroll
     canvas.on('mouse:wheel', function(opt) {
-        const delta = opt.e.deltaY;
-        let zoom = canvas.getZoom();
-        zoom *= 0.999 ** delta;
+        const evt = opt.e;
+        const delta = evt.deltaY;
         
-        // Limit zoom range
-        if (zoom > 4) zoom = 4;
-        if (zoom < 0.5) zoom = 0.5;
+        if (evt.ctrlKey) {
+            // Ctrl + Wheel = Zoom
+            let zoom = canvas.getZoom();
+            zoom *= 0.999 ** delta;
+            
+            // Limit zoom range
+            if (zoom > 4) zoom = 4;
+            if (zoom < 0.3) zoom = 0.3;
+            
+            canvas.zoomToPoint({ x: evt.offsetX, y: evt.offsetY }, zoom);
+        } else if (evt.shiftKey) {
+            // Shift + Wheel = Horizontal scroll
+            const vpt = canvas.viewportTransform;
+            vpt[4] -= delta * 0.5; // Horizontal pan
+            canvas.requestRenderAll();
+        } else {
+            // Default Wheel = Vertical scroll
+            const vpt = canvas.viewportTransform;
+            vpt[5] -= delta * 0.5; // Vertical pan
+            canvas.requestRenderAll();
+        }
         
-        canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-        opt.e.preventDefault();
-        opt.e.stopPropagation();
+        evt.preventDefault();
+        evt.stopPropagation();
     });
 
     // Responsive canvas sizing
@@ -826,6 +842,15 @@ function showKeyboardHelp() {
     const overlay = document.getElementById('keyboardHelpOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
+        
+        // Close when clicking outside the popup
+        setTimeout(() => {
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    dismissKeyboardHelp();
+                }
+            };
+        }, 100);
     }
 }
 
@@ -833,6 +858,7 @@ function dismissKeyboardHelp() {
     const overlay = document.getElementById('keyboardHelpOverlay');
     if (overlay) {
         overlay.style.display = 'none';
+        overlay.onclick = null;
     }
 }
 

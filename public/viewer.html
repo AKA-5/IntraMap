@@ -94,42 +94,44 @@
             </div>
 
             <!-- Keyboard Help Overlay -->
-            <div id="keyboardHelpOverlay" class="welcome-overlay" style="display: none;">
-                <div class="welcome-content">
-                    <h2>Keyboard Shortcuts ⌨️</h2>
-                    <div class="welcome-instructions">
-                        <div class="instruction-item">
-                            <span class="instruction-icon">⬆️⬇️⬅️➡️</span>
-                            <p><strong>Arrow Keys:</strong> Pan the map in any direction</p>
+            <div id="keyboardHelpOverlay" class="help-overlay" style="display: none;">
+                <div class="help-popup">
+                    <button class="help-close-btn" onclick="dismissKeyboardHelp()">✕</button>
+                    <h3>Navigation Guide</h3>
+                    <div class="help-shortcuts">
+                        <div class="help-item">
+                            <span class="help-key">🖱️</span>
+                            <span class="help-desc">Scroll (Shift=horizontal, Ctrl=zoom)</span>
                         </div>
-                        <div class="instruction-item">
-                            <span class="instruction-icon">+/−</span>
-                            <p><strong>+ / - Keys:</strong> Zoom in or out</p>
+                        <div class="help-item">
+                            <span class="help-key">⬆️⬇️⬅️➡️</span>
+                            <span class="help-desc">Pan map</span>
                         </div>
-                        <div class="instruction-item">
-                            <span class="instruction-icon">0</span>
-                            <p><strong>0 Key:</strong> Reset view to default zoom and position</p>
+                        <div class="help-item">
+                            <span class="help-key">+ / -</span>
+                            <span class="help-desc">Zoom in/out</span>
                         </div>
-                        <div class="instruction-item">
-                            <span class="instruction-icon">M</span>
-                            <p><strong>M Key:</strong> Toggle "You Are Here" marker mode</p>
+                        <div class="help-item">
+                            <span class="help-key">0</span>
+                            <span class="help-desc">Reset view</span>
                         </div>
-                        <div class="instruction-item">
-                            <span class="instruction-icon">C</span>
-                            <p><strong>C Key:</strong> Clear the "You Are Here" marker</p>
+                        <div class="help-item">
+                            <span class="help-key">M</span>
+                            <span class="help-desc">Toggle marker mode</span>
                         </div>
-                        <div class="instruction-item">
-                            <span class="instruction-icon">Esc</span>
-                            <p><strong>Esc Key:</strong> Close popups and exit marker mode</p>
+                        <div class="help-item">
+                            <span class="help-key">C</span>
+                            <span class="help-desc">Clear marker</span>
                         </div>
-                        <div class="instruction-item">
-                            <span class="instruction-icon">Space</span>
-                            <p><strong>Space Key:</strong> Toggle welcome overlay</p>
+                        <div class="help-item">
+                            <span class="help-key">Esc</span>
+                            <span class="help-desc">Close popups</span>
+                        </div>
+                        <div class="help-item">
+                            <span class="help-key">Space</span>
+                            <span class="help-desc">Toggle welcome</span>
                         </div>
                     </div>
-                    <button class="btn btn-primary" onclick="dismissKeyboardHelp()" style="margin-top: 20px; width: 100%;">
-                        Close
-                    </button>
                 </div>
             </div>
 
@@ -144,7 +146,7 @@
                     <button class="btn btn-secondary btn-icon" onclick="zoomIn()" title="Zoom In (or press +)">🔍+</button>
                     <button class="btn btn-secondary btn-icon" onclick="zoomOut()" title="Zoom Out (or press -)">🔍-</button>
                     <button class="btn btn-secondary btn-icon" onclick="resetView()" title="Reset View (or press 0)">⟲</button>
-                    <button class="btn btn-secondary btn-icon" onclick="showKeyboardHelp()" title="Keyboard Shortcuts">⌨️</button>
+                    <button class="btn btn-secondary btn-icon" onclick="showKeyboardHelp()" title="Navigation Help (Keyboard & Mouse)">❓</button>
                 </div>
                 <button id="youAreHereBtn" class="you-are-here-btn" onclick="toggleYouAreHere()">
                     📍 You Are Here

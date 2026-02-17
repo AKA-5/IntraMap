@@ -379,6 +379,93 @@ body {
     }
 }
 
+/* Help Popup (Smaller, Centered) */
+.help-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+    animation: fadeIn 0.2s ease;
+}
+
+.help-popup {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    max-width: 400px;
+    width: 100%;
+    box-shadow: var(--shadow-xl);
+    animation: slideUp 0.3s ease;
+    position: relative;
+}
+
+.help-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--gray-500);
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+}
+
+.help-close-btn:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+}
+
+.help-popup h3 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--gray-900);
+    font-size: 1.25rem;
+    padding-right: 30px;
+}
+
+.help-shortcuts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.help-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    transition: background 0.2s;
+}
+
+.help-item:hover {
+    background: var(--gray-50);
+}
+
+.help-key {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: var(--primary-blue);
+    min-width: 80px;
+    font-size: 0.9rem;
+}
+
+.help-desc {
+    color: var(--gray-700);
+    font-size: 0.9rem;
+}
+
 /* Object Info Popup */
 .object-popup {
     position: fixed;
