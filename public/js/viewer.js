@@ -22,7 +22,8 @@ function initializeCanvas() {
     canvas = new fabric.Canvas('viewerCanvas', {
         backgroundColor: '#FFFFFF',
         selection: false,
-        interactive: true
+        interactive: true,
+        enableRetinaScaling: true // Better quality on high-DPI displays
     });
 
     // Handle object clicks
@@ -36,9 +37,65 @@ function initializeCanvas() {
         }
     });
 
+    // Enable panning with mouse drag (when zoomed)
+    let isPanning = false;
+    let lastPosX, lastPosY;
+
+    canvas.on('mouse:down', function(opt) {
+        const evt = opt.e;
+        if (evt.altKey === true || evt.ctrlKey === true || canvas.getZoom() > 1) {
+            // Enable panning mode
+            if (!opt.target || evt.altKey || evt.ctrlKey) {
+                isPanning = true;
+                canvas.selection = false;
+                lastPosX = evt.clientX;
+                lastPosY = evt.clientY;
+                canvas.defaultCursor = 'grabbing';
+            }
+        }
+    });
+
+    canvas.on('mouse:move', function(opt) {
+        if (isPanning) {
+            const evt = opt.e;
+            const vpt = canvas.viewportTransform;
+            vpt[4] += evt.clientX - lastPosX;
+            vpt[5] += evt.clientY - lastPosY;
+            canvas.requestRenderAll();
+            lastPosX = evt.clientX;
+            lastPosY = evt.clientY;
+        }
+    });
+
+    canvas.on('mouse:up', function(opt) {
+        if (isPanning) {
+            canvas.setViewportTransform(canvas.viewportTransform);
+            isPanning = false;
+            canvas.defaultCursor = 'default';
+        }
+    });
+
+    // Mouse wheel zoom
+    canvas.on('mouse:wheel', function(opt) {
+        const delta = opt.e.deltaY;
+        let zoom = canvas.getZoom();
+        zoom *= 0.999 ** delta;
+        
+        // Limit zoom range
+        if (zoom > 4) zoom = 4;
+        if (zoom < 0.5) zoom = 0.5;
+        
+        canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+        opt.e.preventDefault();
+        opt.e.stopPropagation();
+    });
+
     // Responsive canvas sizing
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+    
+    // Keyboard shortcuts
+    initializeKeyboardShortcuts();
 }
 
 // Resize canvas to fit container
@@ -74,6 +131,86 @@ function initializeControls() {
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.search-bar')) {
             document.getElementById('searchResults').classList.remove('visible');
+        }
+    });
+}
+
+// Initialize keyboard shortcuts
+function initializeKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        // Ignore if typing in input field
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        // Escape - Close popup and clear highlights
+        if (e.key === 'Escape') {
+            closePopup();
+            clearHighlights();
+            if (youAreHereMode) {
+                toggleYouAreHere();
+            }
+            // Close keyboard help overlay if open
+            const keyboardHelp = document.getElementById('keyboardHelpOverlay');
+            if (keyboardHelp && keyboardHelp.style.display === 'flex') {
+                dismissKeyboardHelp();
+            }
+            // Close welcome overlay if open
+            const welcome = document.getElementById('welcomeOverlay');
+            if (welcome && welcome.style.display === 'flex') {
+                dismissWelcome();
+            }
+        }
+
+        // Space - Toggle welcome overlay info
+        if (e.key === ' ') {
+            e.preventDefault();
+            const welcome = document.getElementById('welcomeOverlay');
+            if (welcome.style.display === 'none') {
+                showWelcome();
+            } else {
+                dismissWelcome();
+            }
+        }
+
+        // Arrow keys - Pan the canvas
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            e.preventDefault();
+            const vpt = canvas.viewportTransform;
+            const panDistance = 50;
+            
+            if (e.key === 'ArrowLeft') vpt[4] += panDistance;
+            if (e.key === 'ArrowRight') vpt[4] -= panDistance;
+            if (e.key === 'ArrowUp') vpt[5] += panDistance;
+            if (e.key === 'ArrowDown') vpt[5] -= panDistance;
+            
+            canvas.requestRenderAll();
+        }
+
+        // Plus/Minus - Zoom
+        if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            zoomIn();
+        }
+        if (e.key === '-' || e.key === '_') {
+            e.preventDefault();
+            zoomOut();
+        }
+
+        // 0 - Reset view
+        if (e.key === '0') {
+            e.preventDefault();
+            resetView();
+        }
+
+        // C - Clear marker (not Ctrl+C to avoid conflict)
+        if (e.key === 'c' && !e.ctrlKey && !e.metaKey) {
+            clearMarker();
+        }
+
+        // M - Toggle "You Are Here" mode
+        if (e.key === 'm' || e.key === 'M') {
+            toggleYouAreHere();
         }
     });
 }
@@ -162,7 +299,7 @@ function loadFloorToCanvas(floor) {
     }
 
     const floorData = buildingData.floors[floor];
-    document.getElementById('buildingFloor').textContent = floorData.name;
+    // Floor name now shown in dropdown only (removed duplicate display)
 
     if (!floorData.objects || floorData.objects.length === 0) {
         console.log('No objects in floor');
@@ -173,19 +310,39 @@ function loadFloorToCanvas(floor) {
     // Track SVG loading
     let totalSvgObjects = 0;
     let svgLoadCount = 0;
+    let lastRectWithLabel = null; // Track the last rectangle with a label
 
-    floorData.objects.forEach(objData => {
+    floorData.objects.forEach((objData, index) => {
         let obj;
 
         switch (objData.type) {
             case 'rect':
                 obj = new fabric.Rect(objData);
+                // Track if this rect has a label for next text object
+                if (objData.objectLabel) {
+                    lastRectWithLabel = objData;
+                }
                 break;
             case 'circle':
                 obj = new fabric.Circle(objData);
+                if (objData.objectLabel) {
+                    lastRectWithLabel = objData;
+                }
                 break;
             case 'i-text':
                 obj = new fabric.IText(objData.text || '', objData);
+                // Inherit objectLabel from previous rectangle/shape to make text clickable
+                if (lastRectWithLabel && !objData.objectLabel) {
+                    obj.objectLabel = lastRectWithLabel.objectLabel;
+                    obj.objectTags = lastRectWithLabel.objectTags;
+                    obj.objectIcon = lastRectWithLabel.objectIcon;
+                    // Make the text area clickable with pointer cursor
+                    obj.set({
+                        selectable: false,
+                        evented: true,
+                        hoverCursor: 'pointer'
+                    });
+                }
                 break;
             case 'line':
                 obj = new fabric.Line([objData.x1, objData.y1, objData.x2, objData.y2], objData);
@@ -511,7 +668,24 @@ function placeYouAreHere(x, y) {
     btn.classList.remove('active');
     btn.textContent = '📍 You Are Here';
 
+    // Show clear button
+    document.getElementById('clearMarkerBtn').style.display = 'flex';
+
     showToast('Location marked!', 'success');
+}
+
+// Clear "You Are Here" marker
+function clearMarker() {
+    if (youAreHereMarker) {
+        canvas.remove(youAreHereMarker);
+        youAreHereMarker = null;
+        canvas.renderAll();
+        
+        // Hide clear button
+        document.getElementById('clearMarkerBtn').style.display = 'none';
+        
+        showToast('Marker cleared', 'info');
+    }
 }
 
 // Get directions
@@ -556,19 +730,35 @@ function getDirections() {
 
 // Zoom controls
 function zoomIn() {
-    const zoom = canvas.getZoom();
-    canvas.setZoom(zoom * 1.2);
+    let zoom = canvas.getZoom();
+    zoom = zoom * 1.2;
+    if (zoom > 4) zoom = 4; // Max zoom limit
+    
+    // Zoom to center
+    const center = canvas.getCenter();
+    canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom);
     canvas.renderAll();
 }
 
 function zoomOut() {
-    const zoom = canvas.getZoom();
-    canvas.setZoom(zoom / 1.2);
+    let zoom = canvas.getZoom();
+    zoom = zoom / 1.2;
+    if (zoom < 0.3) zoom = 0.3; // Min zoom limit
+    
+    // Zoom to center
+    const center = canvas.getCenter();
+    canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom);
     canvas.renderAll();
 }
 
 function resetView() {
+    // Reset viewport transform
+    canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+    
+    // Reset to fit container
     resizeCanvas();
+    
+    showToast('View reset', 'info');
 }
 
 // Error display
@@ -629,6 +819,20 @@ function dismissWelcome() {
     if (overlay) {
         overlay.style.display = 'none';
         localStorage.setItem('intramap_welcome_seen', 'true');
+    }
+}
+
+function showKeyboardHelp() {
+    const overlay = document.getElementById('keyboardHelpOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+}
+
+function dismissKeyboardHelp() {
+    const overlay = document.getElementById('keyboardHelpOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
     }
 }
 

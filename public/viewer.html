@@ -31,23 +31,27 @@
             <!-- Version Indicator (Temporary for Debugging) -->
             <div
                 style="position: absolute; top: 5px; right: 5px; font-size: 10px; color: #888; background: #eee; padding: 2px 5px; border-radius: 4px; pointer-events: none; z-index: 2000;">
-                v3.0 SIMPLE
+                v5.0 COMPLETE
             </div>
 
-            <div class="header-content">
-                <div class="building-title">
-                    <h1 id="buildingName">Loading...</h1>
-                    <p id="buildingFloor">...</p>
+            <!-- Building Name - Top Center -->
+            <div class="building-title-main">
+                <h1 id="buildingName">Loading...</h1>
+            </div>
+
+            <!-- Controls Row -->
+            <div class="header-controls">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="search" id="searchInput" placeholder="Search places, tags..." autocomplete="off">
+                    <div id="searchResults" class="search-results"></div>
                 </div>
 
-                <select id="floorSelector" class="floor-selector">
-                    <!-- Options populated dynamically -->
-                </select>
-
-                <div class="search-bar">
-                    <input type="search" id="searchInput" placeholder="Search places, tags..." autocomplete="off">
-                    <span class="search-icon">🔍</span>
-                    <div id="searchResults" class="search-results"></div>
+                <div class="floor-info">
+                    <label>Floor:</label>
+                    <select id="floorSelector" class="floor-selector">
+                        <!-- Options populated dynamically -->
+                    </select>
                 </div>
             </div>
         </div>
@@ -89,6 +93,46 @@
                 </div>
             </div>
 
+            <!-- Keyboard Help Overlay -->
+            <div id="keyboardHelpOverlay" class="welcome-overlay" style="display: none;">
+                <div class="welcome-content">
+                    <h2>Keyboard Shortcuts ⌨️</h2>
+                    <div class="welcome-instructions">
+                        <div class="instruction-item">
+                            <span class="instruction-icon">⬆️⬇️⬅️➡️</span>
+                            <p><strong>Arrow Keys:</strong> Pan the map in any direction</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">+/−</span>
+                            <p><strong>+ / - Keys:</strong> Zoom in or out</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">0</span>
+                            <p><strong>0 Key:</strong> Reset view to default zoom and position</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">M</span>
+                            <p><strong>M Key:</strong> Toggle "You Are Here" marker mode</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">C</span>
+                            <p><strong>C Key:</strong> Clear the "You Are Here" marker</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">Esc</span>
+                            <p><strong>Esc Key:</strong> Close popups and exit marker mode</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">Space</span>
+                            <p><strong>Space Key:</strong> Toggle welcome overlay</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="dismissKeyboardHelp()" style="margin-top: 20px; width: 100%;">
+                        Close
+                    </button>
+                </div>
+            </div>
+
             <!-- Canvas Wrapper -->
             <div class="viewer-canvas-wrapper">
                 <canvas id="viewerCanvas"></canvas>
@@ -97,12 +141,16 @@
             <!-- Controls -->
             <div class="viewer-controls">
                 <div class="control-group">
-                    <button class="btn btn-secondary btn-icon" onclick="zoomIn()" title="Zoom In">🔍+</button>
-                    <button class="btn btn-secondary btn-icon" onclick="zoomOut()" title="Zoom Out">🔍-</button>
-                    <button class="btn btn-secondary btn-icon" onclick="resetView()" title="Reset View">⟲</button>
+                    <button class="btn btn-secondary btn-icon" onclick="zoomIn()" title="Zoom In (or press +)">🔍+</button>
+                    <button class="btn btn-secondary btn-icon" onclick="zoomOut()" title="Zoom Out (or press -)">🔍-</button>
+                    <button class="btn btn-secondary btn-icon" onclick="resetView()" title="Reset View (or press 0)">⟲</button>
+                    <button class="btn btn-secondary btn-icon" onclick="showKeyboardHelp()" title="Keyboard Shortcuts">⌨️</button>
                 </div>
                 <button id="youAreHereBtn" class="you-are-here-btn" onclick="toggleYouAreHere()">
                     📍 You Are Here
+                </button>
+                <button id="clearMarkerBtn" class="clear-marker-btn" onclick="clearMarker()" style="display: none;">
+                    ✖️ Clear Marker
                 </button>
             </div>
 

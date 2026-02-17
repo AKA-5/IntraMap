@@ -15,134 +15,133 @@ body {
 .viewer-header {
     background: white;
     border-bottom: 1px solid var(--gray-200);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
     box-shadow: var(--shadow-md);
     z-index: 100;
     position: relative;
-    /* Context for absolute back button */
-    height: 70px;
-    /* Fixed height for consistency */
     display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Center title */
+    flex-direction: column;
+    gap: var(--spacing-sm);
 }
 
-/* Force Back Button Visibility */
-.back-btn {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: var(--primary-blue);
-    color: white;
-    padding: 8px 16px;
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 14px;
-    box-shadow: var(--shadow-sm);
-    z-index: 1000;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.2s ease;
+/* Building Title - Top Center */
+.building-title-main {
+    text-align: center;
+    padding: var(--spacing-xs) 0;
 }
 
-.back-btn:hover {
-    background: var(--primary-dark);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-50%) translateX(-2px);
-}
-
-.header-content {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
-    /* No flex-wrap, keep it clean */
-}
-
-/* Force Back Button Visibility */
-.back-btn {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: var(--primary-blue);
-    color: white;
-    padding: 8px 16px;
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 14px;
-    box-shadow: var(--shadow-sm);
-    z-index: 1000;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.2s ease;
-}
-
-.back-btn:hover {
-    background: var(--primary-dark);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-50%) translateX(-2px);
-}
-
-.building-title {
-    flex: 1;
-    min-width: 200px;
-}
-
-.building-title h1 {
-    font-size: 1.5rem;
+.building-title-main h1 {
+    font-size: 1.75rem;
     margin: 0;
     color: var(--gray-900);
+    font-weight: 700;
 }
 
-.building-title p {
+/* Header Controls Row */
+.header-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.floor-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.floor-info label {
+    font-weight: 600;
+    color: var(--gray-700);
     font-size: 14px;
-    color: var(--gray-500);
-    margin: 0;
+}
+
+.current-floor-name {
+    font-size: 14px;
+    color: var(--gray-600);
+    font-style: italic;
+}
+
+/* Force Back Button Visibility */
+.back-btn {
+    position: absolute;
+    left: 15px;
+    top: 15px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--primary-blue);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: var(--shadow-sm);
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    background: var(--primary-dark);
+    box-shadow: var(--shadow-md);
+    transform: translateX(-2px);
 }
 
 .floor-selector {
     min-width: 150px;
+    padding: 8px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
 }
 
 .search-bar {
     flex: 1;
-    max-width: 400px;
+    max-width: 500px;
     position: relative;
+    min-width: 250px;
 }
 
 .search-bar input {
-    padding-right: 40px;
+    width: 100%;
+    padding: 10px 40px 10px 40px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .search-icon {
     position: absolute;
-    right: 12px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--gray-400);
+    font-size: 16px;
     pointer-events: none;
+    z-index: 1;
 }
 
 .search-results {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 5px);
     left: 0;
     right: 0;
     background: white;
     border: 1px solid var(--gray-200);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
-    margin-top: var(--spacing-xs);
     max-height: 300px;
     overflow-y: auto;
     z-index: 200;
@@ -199,6 +198,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: grab;
+}
+
+.viewer-canvas-wrapper:active {
+    cursor: grabbing;
 }
 
 #viewerCanvas {
@@ -207,6 +211,9 @@ body {
     max-height: 100%;
     box-shadow: var(--shadow-xl);
     background: white;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    transition: transform 0.1s ease-out;
 }
 
 /* Controls */
@@ -253,6 +260,28 @@ body {
 .you-are-here-btn.active {
     background: var(--success);
     animation: pulse 2s infinite;
+}
+
+.clear-marker-btn {
+    background: var(--danger);
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.clear-marker-btn:hover {
+    background: #DC2626;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 @keyframes pulse {
