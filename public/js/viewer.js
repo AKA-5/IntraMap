@@ -75,15 +75,16 @@ function initializeCanvas() {
         }
     });
 
-    // Mouse wheel: Ctrl = Zoom, Shift = Horizontal scroll, Default = Vertical scroll
+    // Mouse wheel: Ctrl = Zoom, Shift = Horizontal scroll, Default = Vertical/Horizontal scroll
     canvas.on('mouse:wheel', function(opt) {
         const evt = opt.e;
-        const delta = evt.deltaY;
+        const deltaY = evt.deltaY;
+        const deltaX = evt.deltaX;
         
         if (evt.ctrlKey) {
             // Ctrl + Wheel = Zoom
             let zoom = canvas.getZoom();
-            zoom *= 0.999 ** delta;
+            zoom *= 0.999 ** deltaY;
             
             // Limit zoom range
             if (zoom > 4) zoom = 4;
@@ -93,12 +94,17 @@ function initializeCanvas() {
         } else if (evt.shiftKey) {
             // Shift + Wheel = Horizontal scroll
             const vpt = canvas.viewportTransform;
-            vpt[4] -= delta * 0.5; // Horizontal pan
+            vpt[4] -= deltaY * 0.5; // Horizontal pan
             canvas.requestRenderAll();
         } else {
-            // Default Wheel = Vertical scroll
+            // Default Wheel = Vertical and Horizontal scroll (trackpad support)
             const vpt = canvas.viewportTransform;
-            vpt[5] -= delta * 0.5; // Vertical pan
+            if (deltaY !== 0) {
+                vpt[5] -= deltaY * 0.5; // Vertical pan
+            }
+            if (deltaX !== 0) {
+                vpt[4] -= deltaX * 0.5; // Horizontal pan
+            }
             canvas.requestRenderAll();
         }
         
