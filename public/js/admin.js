@@ -48,14 +48,36 @@ function initializeCanvas() {
         preserveObjectStacking: true
     });
 
-    // Enable mouse wheel zoom
+    // Mouse wheel: Ctrl = Zoom, Shift = Horizontal scroll, Default = Vertical/Horizontal scroll
     canvas.on('mouse:wheel', function (opt) {
-        const delta = opt.e.deltaY;
-        let zoom = canvas.getZoom();
-        zoom *= 0.999 ** delta;
-        if (zoom > 5) zoom = 5;
-        if (zoom < 0.1) zoom = 0.1;
-        canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+        const evt = opt.e;
+        const deltaY = evt.deltaY;
+        const deltaX = evt.deltaX;
+        
+        if (evt.ctrlKey) {
+            // Ctrl + Wheel = Zoom
+            let zoom = canvas.getZoom();
+            zoom *= 0.999 ** deltaY;
+            if (zoom > 5) zoom = 5;
+            if (zoom < 0.1) zoom = 0.1;
+            canvas.zoomToPoint({ x: evt.offsetX, y: evt.offsetY }, zoom);
+        } else if (evt.shiftKey) {
+            // Shift + Wheel = Horizontal scroll
+            const vpt = canvas.viewportTransform;
+            vpt[4] -= deltaY * 0.5;
+            canvas.requestRenderAll();
+        } else {
+            // Default Wheel = Vertical and Horizontal scroll (trackpad support)
+            const vpt = canvas.viewportTransform;
+            if (deltaY !== 0) {
+                vpt[5] -= deltaY * 0.5; // Vertical pan
+            }
+            if (deltaX !== 0) {
+                vpt[4] -= deltaX * 0.5; // Horizontal pan
+            }
+            canvas.requestRenderAll();
+        }
+        
         opt.e.preventDefault();
         opt.e.stopPropagation();
     });
@@ -232,6 +254,9 @@ function addShapeAtPosition(x, y) {
         saveState();
         saveCurrentFloorToData();
         triggerAutoSave();
+        
+        // Auto-switch back to select mode after creating shape
+        selectTool('select');
     }
 }
 
@@ -260,6 +285,9 @@ function addIcon(iconName) {
         canvas.renderAll();
         saveCurrentFloorToData();
         triggerAutoSave();
+        
+        // Auto-switch back to select mode after adding icon
+        selectTool('select');
     });
 }
 
@@ -938,7 +966,17 @@ function initializeKeyboardShortcuts() {
             e.preventDefault();
             redo();
         }
-        // Delete - Remove selected object (FIXED)
+        // Ctrl+S - Save Draft
+        else if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            saveDraft();
+        }
+        // Ctrl+0 - Fit to Screen
+        else if (e.ctrlKey && e.key === '0') {
+            e.preventDefault();
+            fitToScreen();
+        }
+        // Delete - Remove selected object
         else if (e.key === 'Delete') {
             e.preventDefault();
             const activeObj = canvas.getActiveObject();
@@ -952,12 +990,39 @@ function initializeKeyboardShortcuts() {
                 showToast('Object deleted', 'success');
             }
         }
-        // Escape - Deselect
+        // Escape - Deselect and close help
         else if (e.key === 'Escape') {
             e.preventDefault();
-            canvas.discardActiveObject();
-            canvas.renderAll();
-            clearPropertiesPanel();
+            const helpOverlay = document.getElementById('keyboardHelpOverlay');
+            if (helpOverlay && helpOverlay.style.display === 'flex') {
+                dismissKeyboardHelp();
+            } else {
+                canvas.discardActiveObject();
+                canvas.renderAll();
+                clearPropertiesPanel();
+            }
+        }
+        // Arrow keys - Pan canvas
+        else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            e.preventDefault();
+            const vpt = canvas.viewportTransform;
+            const panDistance = 30;
+            
+            if (e.key === 'ArrowUp') vpt[5] += panDistance;
+            if (e.key === 'ArrowDown') vpt[5] -= panDistance;
+            if (e.key === 'ArrowLeft') vpt[4] += panDistance;
+            if (e.key === 'ArrowRight') vpt[4] -= panDistance;
+            
+            canvas.requestRenderAll();
+        }
+        // Plus/Minus - Zoom
+        else if (e.key === '+' || e.key === '=') {
+            e.preventDefault();
+            zoomIn();
+        }
+        else if (e.key === '-' || e.key === '_') {
+            e.preventDefault();
+            zoomOut();
         }
     });
 }
@@ -1057,6 +1122,32 @@ function redo() {
     renderFloorTabs();
     loadFloorToCanvas(currentFloor);
     showToast('Redo', 'success');
+}
+
+// Show keyboard help popup
+function showKeyboardHelp() {
+    const overlay = document.getElementById('keyboardHelpOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        
+        // Close when clicking outside the popup
+        setTimeout(() => {
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    dismissKeyboardHelp();
+                }
+            };
+        }, 100);
+    }
+}
+
+// Dismiss keyboard help popup
+function dismissKeyboardHelp() {
+    const overlay = document.getElementById('keyboardHelpOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.onclick = null;
+    }
 }
 
 // ========== LINE DRAWING TOOL ==========

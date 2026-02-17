@@ -17,7 +17,8 @@
         <!-- Top Toolbar -->
         <div class="toolbar">
             <div class="toolbar-left">
-                <a href="index.html" class="btn btn-secondary btn-sm">← Home</a>
+                <a href="index.html" class="btn btn-secondary btn-sm" title="Back to Home">← Home</a>
+                <div class="toolbar-divider"></div>
                 <input type="text" id="buildingName" class="building-name-input"
                     placeholder="Building Name (e.g., Centaurus Mall)" autocomplete="off">
                 <div class="auto-save-indicator" id="autoSaveIndicator">
@@ -30,19 +31,19 @@
                 <div class="floor-tabs" id="floorTabsContainer">
                     <!-- Floor tabs will be dynamically generated -->
                 </div>
-                <button class="btn btn-secondary btn-sm" onclick="addNewFloor()" title="Add Floor">+ Floor</button>
+                <button class="btn btn-secondary btn-sm" onclick="addNewFloor()" title="Add New Floor">+ Floor</button>
             </div>
 
-            <div class="toolbar-actions">
-                <button class="btn btn-secondary" onclick="loadDemoData()" title="Load demo building data">
-                    📂 Load Demo
-                </button>
-                <button class="btn btn-secondary" onclick="saveDraft()">💾 Save Draft</button>
-                <button class="btn btn-primary" onclick="saveToCloud()">☁️ Save to Cloud</button>
-                <button class="btn btn-secondary" onclick="loadFromCloud()">📥 Load</button>
-                <button class="btn btn-secondary" onclick="showQRModal()">📱 Generate QR</button>
-                <button class="btn btn-secondary" onclick="fitToScreen()" title="Reset zoom and center canvas">🔍 Fit to
-                    Screen</button>
+            <div class="toolbar-right">
+                <button class="btn btn-secondary btn-sm" onclick="loadDemoData()" title="Load demo building data">📂 Demo</button>
+                <div class="toolbar-divider"></div>
+                <button class="btn btn-secondary btn-sm" onclick="saveDraft()" title="Save Draft (Ctrl+S)">💾</button>
+                <button class="btn btn-primary btn-sm" onclick="saveToCloud()" title="Save to Cloud">☁️ Save</button>
+                <button class="btn btn-secondary btn-sm" onclick="loadFromCloud()" title="Load from Cloud">📥 Load</button>
+                <div class="toolbar-divider"></div>
+                <button class="btn btn-secondary btn-sm" onclick="showQRModal()" title="Generate QR Code">📱 QR</button>
+                <button class="btn btn-secondary btn-sm" onclick="fitToScreen()" title="Fit to Screen (Ctrl+0)">🔍</button>
+                <button class="btn btn-secondary btn-sm" onclick="showKeyboardHelp()" title="Keyboard Shortcuts">❓</button>
             </div>
         </div>
 
@@ -141,6 +142,56 @@
                         </svg>
                         <p>Select an object to edit its properties</p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Help Overlay -->
+    <div id="keyboardHelpOverlay" class="help-overlay" style="display: none;">
+        <div class="help-popup">
+            <button class="help-close-btn" onclick="dismissKeyboardHelp()">✕</button>
+            <h3>Editor Keyboard Shortcuts</h3>
+            <div class="help-shortcuts">
+                <div class="help-item">
+                    <span class="help-key">Ctrl + C</span>
+                    <span class="help-desc">Copy selected object</span>
+                </div>
+                <div class="help-item">
+                    <span class="help-key">Ctrl + V</span>
+                    <span class="help-desc">Paste object</span>
+                </div>
+                <div class="help-item">
+                    <span class="help-key">Ctrl + Z</span>
+                    <span class="help-desc">Undo last action</span>
+                </div>
+                <div class="help-item">
+                    <span class="help-key">Ctrl + Y</span>
+                    <span class="help-desc">Redo action</span>
+                </div>
+                <div class="help-item">
+                    <span class="help-key">Delete</span>
+                    <span class="help-desc">Delete selected</span>
+                </div>
+                <div class="help-item">
+                    <span class="help-key">Esc</span>
+                    <span class="help-desc">Deselect object</span>
+                </div>
+                <div class="help-item">
+                    <span class="help-key">Ctrl + S</span>
+                    <span class="help-desc">Save draft</span>
+                </div>
+                <div class="help-item">
+                    <span class="help-key">Ctrl + 0</span>
+                    <span class="help-desc">Fit to screen</span>
+                </div>
+                <div class="help-item">
+                    <span class="help-key">⬆️⬇️⬅️➡️</span>
+                    <span class="help-desc">Pan canvas</span>
+                </div>
+                <div class="help-item">
+                    <span class="help-key">+ / -</span>
+                    <span class="help-desc">Zoom in/out</span>
                 </div>
             </div>
         </div>
