@@ -1,14 +1,15 @@
 /* Viewer Specific Styles */
 body {
     margin: 0;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;  /* Allow vertical scrolling */
     background: var(--gray-900);
 }
 
 .viewer-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    min-height: 100vh;  /* Changed from height to min-height */
 }
 
 /* Top Bar */
@@ -196,8 +197,9 @@ body {
 .viewer-canvas-container {
     flex: 1;
     position: relative;
-    overflow: hidden;
+    overflow: visible;  /* Changed from hidden to visible */
     background: var(--gray-100);
+    min-height: 500px;  /* Ensure minimum height */
 }
 
 .viewer-canvas-wrapper {
@@ -643,6 +645,19 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+    /* Allow scrolling on mobile */
+    body {
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 100px;  /* Space for fixed controls */
+    }
+    
+    .viewer-container {
+        min-height: 100vh;
+        height: auto;
+        padding-bottom: 100px;  /* Extra space for controls */
+    }
+    
     /* Hide version indicator on mobile */
     .version-indicator {
         display: none;
@@ -723,31 +738,42 @@ body {
 
     /* Canvas Container - Adjust for Header and Controls */
     .viewer-canvas-container {
-        height: calc(100vh - 250px);  /* Account for mobile header + controls */
-        min-height: 300px;
-        padding-bottom: 10px;  /* Small padding to ensure controls don't overlap */
+        min-height: 500px;  /* Ensure canvas is visible */
+        height: auto;  /* Allow natural height */
+        overflow: visible;
+        padding-bottom: 80px;  /* Space for controls */
     }
     
     /* Make canvas fill more space */
     .viewer-canvas-wrapper {
         cursor: default;  /* No grab cursor on mobile */
+        min-height: 500px;
+        position: relative;
     }
     
     #viewerCanvas {
-        max-width: 98vw;
-        max-height: 100%;
-        touch-action: pan-x pan-y pinch-zoom;  /* Enable touch gestures */
+        max-width: 100%;
+        max-height: none;  /* Remove height restriction */
+        width: 100%;
+        height: auto;
+        touch-action: manipulation;  /* Enable pinch-zoom and pan */
+        min-height: 500px;
     }
 
-    /* Controls - Bottom, Touch-Friendly, Compact, Fully Visible */
+    /* Controls - Fixed at Bottom, Always Visible */
     .viewer-controls {
+        position: fixed;
         bottom: 10px;
         right: var(--spacing-xs);
         left: var(--spacing-xs);
         flex-direction: row;
         gap: 6px;
         flex-wrap: wrap;
-        z-index: 100;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 8px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-xl);
     }
 
     .control-group {
@@ -756,8 +782,10 @@ body {
         justify-content: center;
         align-items: center;
         gap: 6px;
-        padding: 8px;
+        padding: 4px;
         min-width: 0;
+        background: transparent;  /* No background, parent has it */
+        box-shadow: none;
     }
 
     /* Buttons - Touch Targets, Compact for Mobile */

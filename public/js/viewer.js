@@ -23,7 +23,9 @@ function initializeCanvas() {
         backgroundColor: '#FFFFFF',
         selection: false,
         interactive: true,
-        enableRetinaScaling: true // Better quality on high-DPI displays
+        enableRetinaScaling: true, // Better quality on high-DPI displays
+        allowTouchScrolling: true, // Enable touch scrolling
+        stopContextMenu: true // Prevent context menu on long press
     });
 
     // Handle object clicks
@@ -110,6 +112,67 @@ function initializeCanvas() {
         
         evt.preventDefault();
         evt.stopPropagation();
+    });
+
+    // Touch gesture support for mobile
+    let touchStartDistance = 0;
+    let touchStartZoom = 1;
+    let touchStartCenter = null;
+    
+    canvas.on('touch:gesture', function(e) {
+        if (e.e.touches && e.e.touches.length === 2) {
+            // Pinch zoom
+            const point1 = { x: e.e.touches[0].clientX, y: e.e.touches[0].clientY };
+            const point2 = { x: e.e.touches[1].clientX, y: e.e.touches[1].clientY };
+            
+            const currentDistance = Math.sqrt(
+                Math.pow(point2.x - point1.x, 2) + 
+                Math.pow(point2.y - point1.y, 2)
+            );
+            
+            if (touchStartDistance === 0) {
+                touchStartDistance = currentDistance;
+                touchStartZoom = canvas.getZoom();
+                touchStartCenter = {
+                    x: (point1.x + point2.x) / 2,
+                    y: (point1.y + point2.y) / 2
+                };
+            }
+            
+            const scale = currentDistance / touchStartDistance;
+            let newZoom = touchStartZoom * scale;
+            
+            // Limit zoom
+            if (newZoom > 4) newZoom = 4;
+            if (newZoom < 0.3) newZoom = 0.3;
+            
+            if (touchStartCenter) {
+                canvas.zoomToPoint(
+                    new fabric.Point(touchStartCenter.x, touchStartCenter.y),
+                    newZoom
+                );
+            }
+            
+            e.e.preventDefault();
+            e.e.stopPropagation();
+        }
+    });
+    
+    canvas.on('touch:drag', function(e) {
+        // Enable panning with single finger drag when zoomed
+        if (canvas.getZoom() > 1 && e.e.touches && e.e.touches.length === 1) {
+            const vpt = canvas.viewportTransform;
+            vpt[4] += e.self.x - e.self.lastX;
+            vpt[5] += e.self.y - e.self.lastY;
+            canvas.requestRenderAll();
+        }
+    });
+    
+    // Reset touch tracking when gesture ends
+    canvas.upperCanvasEl.addEventListener('touchend', function() {
+        touchStartDistance = 0;
+        touchStartZoom = 1;
+        touchStartCenter = null;
     });
 
     // Responsive canvas sizing
