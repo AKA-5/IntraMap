@@ -662,7 +662,14 @@ function loadDraftFromLocalStorage() {
             buildingData = JSON.parse(draft);
             document.getElementById('buildingName').value = buildingData.name || '';
             updateFloorCounter();
-            loadFloorToCanvas(currentFloor);
+            
+            // Render floor tabs and switch to first floor
+            renderFloorTabs();
+            const firstFloorKey = Object.keys(buildingData.floors)[0];
+            if (firstFloorKey) {
+                switchFloor(firstFloorKey);
+            }
+            
             updateAutoSaveIndicator('saved');
         } catch (e) {
             console.error('Failed to load draft:', e);
@@ -736,7 +743,15 @@ async function loadFromCloud() {
         const data = await api.loadBuilding(buildingId);
         buildingData = data;
         document.getElementById('buildingName').value = data.name;
-        loadFloorToCanvas(currentFloor);
+        
+        // Update floor counter based on loaded data
+        updateFloorCounter();
+        
+        // Render floor tabs and switch to first floor
+        renderFloorTabs();
+        const firstFloorKey = Object.keys(buildingData.floors)[0];
+        switchFloor(firstFloorKey);
+        
         showToast('Building loaded successfully!', 'success');
     } catch (error) {
         showToast('Failed to load: ' + error.message, 'error');
@@ -768,11 +783,10 @@ async function loadDemoData() {
         // Render floor tabs and load first floor
         renderFloorTabs();
         
-        // Get first floor key
+        // Get first floor key and switch to it properly
         const firstFloorKey = Object.keys(buildingData.floors)[0];
-        currentFloor = firstFloorKey;
+        switchFloor(firstFloorKey);
         
-        loadFloorToCanvas(currentFloor);
         showToast('Demo data loaded! Explore Centaurus Shopping Mall', 'success');
     } catch (error) {
         showToast('Failed to load demo data: ' + error.message, 'error');
