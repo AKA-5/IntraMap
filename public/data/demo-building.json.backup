@@ -1,11 +1,11 @@
 {
     "version": "1.0",
     "buildingId": "sample",
-    "name": "Demo Shopping Mall",
-    "createdAt": "2026-02-10T04:00:00.000Z",
-    "updatedAt": "2026-02-10T04:30:00.000Z",
+    "name": "Centaurus Shopping Mall",
+    "createdAt": "2026-02-17T10:00:00.000Z",
+    "updatedAt": "2026-02-17T10:00:00.000Z",
     "floors": {
-        "floor_1": {
+        "ground": {
             "name": "Ground Floor",
             "objects": [
                 {

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Cache Cleaner - IntraMap</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 30px;
+            background: #F3F4F6;
+            text-align: center;
+        }
+        .box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 { color: #1F2937; margin-bottom: 20px; }
+        .status { 
+            padding: 15px; 
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success { background: #D1FAE5; color: #065F46; }
+        .warning { background: #FEF3C7; color: #92400E; }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #3B82F6;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .btn:hover { background: #2563EB; }
+        code {
+            background: #F3F4F6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🧹 IntraMap Cache Cleaner</h1>
+        <div id="status" class="status warning">Checking for cached data...</div>
+        <div id="instructions"></div>
+    </div>
+
+    <script>
+        let swKilled = false;
+        let cacheCleared = false;
+
+        async function killEverything() {
+            const statusDiv = document.getElementById('status');
+            const instructionsDiv = document.getElementById('instructions');
+
+            // 1. Kill Service Workers
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    if (registrations.length > 0) {
+                        for (let registration of registrations) {
+                            await registration.unregister();
+                            console.log('Unregistered Service Worker:', registration);
+                        }
+                        swKilled = true;
+                        statusDiv.textContent = `✅ Killed ${registrations.length} Service Worker(s)`;
+                    } else {
+                        statusDiv.textContent = '✅ No Service Workers found';
+                    }
+                } catch(e) {
+                    console.error('SW error:', e);
+                }
+            }
+
+            // 2. Clear all caches
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    if (cacheNames.length > 0) {
+                        for (let name of cacheNames) {
+                            await caches.delete(name);
+                            console.log('Deleted cache:', name);
+                        }
+                        cacheCleared = true;
+                    }
+                } catch(e) {
+                    console.error('Cache error:', e);
+                }
+            }
+
+            // 3. Clear localStorage
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch(e) {
+                console.error('Storage error:', e);
+            }
+
+            // 4. Show result and redirect
+            setTimeout(() => {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✨ All caches cleared successfully!';
+                
+                instructionsDiv.innerHTML = `
+                    <p>Cache cleaned! Now:</p>
+                    <ol style="text-align: left; display: inline-block;">
+                        <li>Press <code>Ctrl + Shift + R</code> (hard refresh)</li>
+                        <li>Or click the button below</li>
+                    </ol>
+                    <br>
+                    <a href="viewer.html?building=sample&nocache=${Date.now()}" class="btn">
+                        🗺️ Open Fresh Viewer
+                    </a>
+                `;
+            }, 500);
+        }
+
+        // Run immediately
+        killEverything();
+    </script>
+</body>
+</html>

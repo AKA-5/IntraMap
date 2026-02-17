@@ -28,7 +28,9 @@ function initializeCanvas() {
     // Handle object clicks
     canvas.on('mouse:down', (e) => {
         if (youAreHereMode) {
-            placeYouAreHere(e.pointer.x, e.pointer.y);
+            // Get accurate canvas coordinates accounting for zoom/pan
+            const pointer = canvas.getPointer(e.e);
+            placeYouAreHere(pointer.x, pointer.y);
         } else if (e.target && e.target.objectLabel) {
             showObjectDetails(e.target); // Fixed function name
         }
@@ -76,26 +78,11 @@ function initializeControls() {
     });
 }
 
-// Load building data from API
-// Load building data
+// Load building data - SIMPLIFIED
 const urlParams = new URLSearchParams(window.location.search);
 const buildingId = urlParams.get('building');
 
-// DEBUG: FORCE UNREGISTER SERVICE WORKERS to solve caching issues
-if (navigator.serviceWorker) {
-    navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        for (let registration of registrations) {
-            console.log('Unregistering Service Worker:', registration);
-            registration.unregister();
-        }
-    });
-}
-// END DEBUG
-
-// Initialize API
-const api = new IntraMapAPI();
 async function loadBuildingData() {
-    console.log('Starting loadBuildingData...');
     if (!buildingId) {
         showError('No building ID provided in URL');
         return;
@@ -104,130 +91,40 @@ async function loadBuildingData() {
     try {
         document.getElementById('loadingOverlay').classList.remove('hidden');
 
-        // FORCE RELOAD for demo/sample
+        // SIMPLE: Just load the JSON file directly
         if (buildingId === 'sample') {
-            console.log('Forcing fresh load for sample...');
-            localStorage.removeItem(`intramap_building_${buildingId}`);
+            const response = await fetch('data/demo-building.json');
+            if (!response.ok) throw new Error('Failed to load demo data');
+            buildingData = await response.json();
+        } else {
+            // Load from API for other buildings
+            const api = new IntraMapAPI();
+            buildingData = await api.loadBuilding(buildingId);
         }
 
-        console.log('Calling api.loadBuilding with ID:', buildingId);
-
-        // Timeout race to catch hanging fetches
-        const fetchPromise = api.loadBuilding(buildingId);
-        const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Network timeout - fetch took too long')), 10000)
-        );
-
-        buildingData = await Promise.race([fetchPromise, timeoutPromise]);
-
-        console.log('Data received:', buildingData);
-
-        if (!buildingData) {
-            throw new Error('No data received (empty response)');
-        }
+        if (!buildingData) throw new Error('No data received');
 
         // Initialize UI with data
-        const nameEl = document.getElementById('buildingName');
-        if (nameEl) nameEl.textContent = buildingData.name;
-
+        document.getElementById('buildingName').textContent = buildingData.name;
         document.title = `${buildingData.name} - IntraMap`;
 
-        // Setup floor selector
-        console.log('Populating floor selector...');
+        // Populate floor selector
         populateFloorSelector();
 
         // Load initial floor
-        console.log('Loading floor to canvas:', currentFloor);
         loadFloorToCanvas(currentFloor);
 
-        console.log('Hiding overlay...');
+        // Hide loading
         document.getElementById('loadingOverlay').classList.add('hidden');
+
+        // Show welcome overlay for first-time visitors
+        setTimeout(() => showWelcome(), 500);
 
     } catch (error) {
         console.error('Error loading building:', error);
-        alert('Critical Error: ' + error.message); // Visible feedback for user
-
-        // Try to load from cache
-        const cached = getCachedBuilding(buildingId);
-        if (cached) {
-            buildingData = cached;
-            document.getElementById('buildingName').textContent = buildingData.name;
-            populateFloorSelector();
-            loadFloorToCanvas(currentFloor);
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            showToast('Loaded from offline cache', 'info');
-        } else {
-            showError('Failed to load building: ' + error.message);
-        }
-    }
-}
-const popupHeight = popupRect.height || 200;
-
-// Restore opacity
-popup.style.opacity = '1';
-
-// 1. Start with preferred position: To the RIGHT of the object, Centered Vertically
-let left = objViewportX + (obj.width * zoom / 2) + 15;
-let top = objViewportY - (popupHeight / 2);
-
-// 2. Check Right Edge: If it doesn't fit on right, try LEFT
-if (left + popupWidth > viewportWidth - 20) {
-    left = objViewportX - (obj.width * zoom / 2) - popupWidth - 15;
-}
-
-// 3. Check Bottom Edge: If it goes off bottom, push it UP
-if (top + popupHeight > viewportHeight - 20) {
-    top = viewportHeight - popupHeight - 20;
-}
-
-// 4. Check Top Edge: If it goes off top, push it DOWN
-if (top < 20) {
-    top = 20;
-}
-
-// 5. Special Case: Small Screens / Mobile
-if (viewportWidth < 768) {
-    // Center on screen or stick to bottom
-    left = (viewportWidth - popupWidth) / 2;
-    top = (viewportHeight - popupHeight) / 2;
-}
-
-// Apply computed positions
-popup.style.left = `${left}px`;
-popup.style.top = `${top}px`;
-popup.classList.add('visible');
-
-selectedObject = obj;
-document.getElementById('buildingName').textContent = buildingData.name;
-document.title = `${buildingData.name} - IntraMap`;
-
-// Populate floor selector dynamically
-populateFloorSelector();
-
-// Load initial floor
-loadFloorToCanvas(currentFloor);
-
-// Hide loading
-document.getElementById('loadingOverlay').classList.add('hidden');
-
-// Cache for offline use
-cacheBuilding(buildingData);
-
-    } catch (error) {
-    console.error('Failed to load building:', error);
-
-    // Try to load from cache
-    const cached = getCachedBuilding(buildingId);
-    if (cached) {
-        buildingData = cached;
-        document.getElementById('buildingName').textContent = buildingData.name;
-        loadFloorToCanvas(currentFloor);
         document.getElementById('loadingOverlay').classList.add('hidden');
-        showToast('Loaded from offline cache', 'info');
-    } else {
         showError('Failed to load building: ' + error.message);
     }
-}
 }
 
 // Populate floor selector dynamically
@@ -716,13 +613,22 @@ function getCachedBuilding(buildingId) {
     }
 }
 
-// Service Worker// SERVICE WORKER KILL SWITCH
-// We are intentionally removing the PWA functionality to fix severe caching issues.
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        for (let registration of registrations) {
-            console.log('Unregistering Service Worker to fix cache:', registration);
-            registration.unregister();
+// Welcome overlay functions
+function showWelcome() {
+    const hasSeenWelcome = localStorage.getItem('intramap_welcome_seen');
+    if (!hasSeenWelcome && buildingData) {
+        const overlay = document.getElementById('welcomeOverlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
         }
-    });
+    }
 }
+
+function dismissWelcome() {
+    const overlay = document.getElementById('welcomeOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        localStorage.setItem('intramap_welcome_seen', 'true');
+    }
+}
+

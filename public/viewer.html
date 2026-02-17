@@ -31,7 +31,7 @@
             <!-- Version Indicator (Temporary for Debugging) -->
             <div
                 style="position: absolute; top: 5px; right: 5px; font-size: 10px; color: #888; background: #eee; padding: 2px 5px; border-radius: 4px; pointer-events: none; z-index: 2000;">
-                v1.5 (Fixed)
+                v3.0 SIMPLE
             </div>
 
             <div class="header-content">
@@ -58,6 +58,35 @@
             <div id="loadingOverlay" class="loading-overlay">
                 <div class="spinner"></div>
                 <h2>Loading floor plan...</h2>
+                <p style="color: #666; margin-top: 10px; font-size: 14px;">Preparing interactive map...</p>
+            </div>
+            
+            <!-- Welcome Instructions (shown on first visit) -->
+            <div id="welcomeOverlay" class="welcome-overlay" style="display: none;">
+                <div class="welcome-content">
+                    <h2>Welcome to IntraMap! 🗺️</h2>
+                    <div class="welcome-instructions">
+                        <div class="instruction-item">
+                            <span class="instruction-icon">🔍</span>
+                            <p><strong>Search:</strong> Use the search bar to find any location</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">📍</span>
+                            <p><strong>Navigate:</strong> Click "You Are Here" to mark your location</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">🏢</span>
+                            <p><strong>Explore:</strong> Switch floors using the dropdown menu</p>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="instruction-icon">👆</span>
+                            <p><strong>Details:</strong> Tap any location to see more information</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="dismissWelcome()" style="margin-top: 20px; width: 100%;">
+                        Got it, let's explore!
+                    </button>
+                </div>
             </div>
 
             <!-- Canvas Wrapper -->

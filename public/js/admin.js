@@ -660,6 +660,39 @@ async function loadFromCloud() {
     }
 }
 
+// Load demo data
+async function loadDemoData() {
+    if (!confirm('Load demo building data? This will replace your current work.')) {
+        return;
+    }
+
+    try {
+        showToast('Loading demo data...', 'info');
+        const response = await fetch('data/demo-building.json');
+        if (!response.ok) {
+            throw new Error('Failed to load demo data');
+        }
+        const data = await response.json();
+        buildingData = data;
+        
+        // Set the building name
+        document.getElementById('buildingName').value = data.name;
+        
+        // Render floor tabs and load first floor
+        renderFloorTabs();
+        
+        // Get first floor key
+        const firstFloorKey = Object.keys(buildingData.floors)[0];
+        currentFloor = firstFloorKey;
+        
+        loadFloorToCanvas(currentFloor);
+        showToast('Demo data loaded! Explore Centaurus Shopping Mall', 'success');
+    } catch (error) {
+        showToast('Failed to load demo data: ' + error.message, 'error');
+        console.error('Load demo error:', error);
+    }
+}
+
 // Generate QR code
 function generateQRCode() {
     const buildingName = document.getElementById('buildingName').value.trim();

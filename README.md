@@ -2,9 +2,18 @@
 
 A production-ready web application for creating and sharing interactive indoor floor plans with QR code navigation. Built entirely on **100% free services** (Cloudflare Workers + Vercel).
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Free](https://img.shields.io/badge/cost-$0%2Fmonth-brightgreen)
+
+## 🆕 What's New in v1.1.0
+
+- **✨ Professional Demo Building** - Comprehensive Centaurus Shopping Mall demo with 3 floors and 30+ locations
+- **🎯 Enhanced Viewer UI** - Welcome overlay with interactive instructions for first-time visitors
+- **📂 Load Demo Button** - Quick-load demo data in admin panel for testing and learning
+- **🏢 Better Landing Page** - Improved hero section with clearer call-to-action
+- **🎨 Improved Demo Data** - More realistic locations, better tags, and professional layout
+- **📱 All Available Icons** - Demo showcases all 13 icon types (restaurant, cafe, restroom, exit, stairs, elevator, ATM, parking, info, shop, medical, security, help)
 
 ## ✨ Features
 
