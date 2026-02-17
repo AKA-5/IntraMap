@@ -734,88 +734,95 @@ body {
         font-size: 14px;
     }
 
-    /* Canvas Container - Adjust for Header and Controls */
+    /* Canvas Container - Scrollable on Mobile */
     .viewer-canvas-container {
-        min-height: 500px;  /* Ensure canvas is visible */
+        min-height: 60vh;  /* Minimum visible area */
         height: auto;  /* Allow natural height */
-        overflow: visible;
-        padding-bottom: 80px;  /* Space for controls */
+        overflow-x: auto;  /* Enable horizontal scroll */
+        overflow-y: auto;  /* Enable vertical scroll */
+        -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
+        padding-bottom: 120px;  /* Space for fixed controls */
     }
     
-    /* Make canvas fill more space */
+    /* Canvas wrapper - allow natural dimensions */
     .viewer-canvas-wrapper {
         cursor: default;  /* No grab cursor on mobile */
-        min-height: 500px;
-        position: relative;
+        min-height: auto;
+        width: auto;  /* Allow canvas to define width */
+        height: auto;  /* Allow canvas to define height */
+        display: block;  /* Remove flex centering */
+        padding: var(--spacing-md);  /* Padding around canvas */
     }
     
     #viewerCanvas {
-        max-width: 100%;
-        max-height: none;  /* Remove height restriction */
-        width: 100%;
-        height: auto;
+        display: block;
         touch-action: manipulation;  /* Enable pinch-zoom and pan */
-        min-height: 500px;
+        margin: 0 auto;  /* Center canvas */
     }
 
-    /* Controls - Fixed at Bottom, Always Visible */
+    /* Controls - Compact, Fixed at Bottom */
     .viewer-controls {
         position: fixed;
         bottom: 10px;
         right: var(--spacing-xs);
         left: var(--spacing-xs);
         flex-direction: row;
-        gap: 6px;
-        flex-wrap: wrap;
+        gap: 8px;
+        flex-wrap: nowrap;  /* Single row */
         z-index: 1000;
-        background: rgba(255, 255, 255, 0.95);
-        padding: 8px;
+        background: rgba(255, 255, 255, 0.98);
+        padding: 10px;
         border-radius: var(--radius-lg);
         box-shadow: var(--shadow-xl);
+        justify-content: space-between;
     }
 
     .control-group {
-        flex: 1;
+        flex: 0 0 auto;  /* Don't grow */
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        gap: 6px;
-        padding: 4px;
+        gap: 4px;  /* Tight spacing */
+        padding: 0;
         min-width: 0;
-        background: transparent;  /* No background, parent has it */
+        background: transparent;
         box-shadow: none;
     }
+    
+    /* Zoom controls - extra compact */
+    .control-group .btn-icon {
+        min-width: 36px;  /* Smaller */
+        min-height: 36px;
+        padding: 6px;
+        font-size: 14px;
+        border-radius: var(--radius-md);
+    }
 
-    /* Buttons - Touch Targets, Compact for Mobile */
+    /* Buttons - Compact Touch Targets */
     .you-are-here-btn,
-    .clear-marker-btn,
-    .control-btn,
-    .help-btn {
-        min-height: 42px;
-        min-width: 42px;
-        padding: 8px 10px;
+    .clear-marker-btn {
+        min-height: 36px;
+        min-width: auto;
+        padding: 8px 12px;
         font-size: 12px;
-        flex: 1;
+        flex: 1 1 auto;  /* Grow to fill space */
         justify-content: center;
         white-space: nowrap;
     }
     
+    .control-btn,
+    .help-btn {
+        min-height: 36px;
+        min-width: 36px;
+        padding: 8px;
+        font-size: 14px;
+    }
+    
     /* Icon buttons in control group - more compact */
     .control-group .btn-icon {
-        min-width: 40px;
-        padding: 8px;
-        font-size: 16px;
-    }
-    
-    /* "You Are Here" button - compact text */
-    .you-are-here-btn {
-        font-size: 13px;
-        padding: 10px 12px;
-    }
-    
-    .clear-marker-btn {
-        font-size: 13px;
-        padding: 10px 12px;
+        min-width: 36px;
+        padding: 6px;
+        font-size: 14px;
     }
 
     /* Object Popup - Bottom Sheet Style, More Compact */

@@ -183,19 +183,76 @@ function initializeCanvas() {
     initializeKeyboardShortcuts();
 }
 
-// Resize canvas to fit container
+// Fit canvas to actual content bounds (like draw.io)
+function fitCanvasToContent() {
+    const objects = canvas.getObjects();
+    
+    if (objects.length === 0) {
+        // Default size if no objects
+        canvas.baseWidth = 600;
+        canvas.baseHeight = 600;
+        resizeCanvas();
+        return;
+    }
+
+    // Calculate bounding box of all objects
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+
+    objects.forEach(obj => {
+        const bound = obj.getBoundingRect();
+        minX = Math.min(minX, bound.left);
+        minY = Math.min(minY, bound.top);
+        maxX = Math.max(maxX, bound.left + bound.width);
+        maxY = Math.max(maxY, bound.top + bound.height);
+    });
+
+    // Calculate content dimensions with padding
+    const padding = 100; // Padding around content
+    const contentWidth = (maxX - minX) + (padding * 2);
+    const contentHeight = (maxY - minY) + (padding * 2);
+
+    // Make it square - use the larger dimension
+    const size = Math.max(contentWidth, contentHeight, 400); // Minimum 400px
+
+    // Store base dimensions
+    canvas.baseWidth = size;
+    canvas.baseHeight = size;
+
+    // Adjust object positions to account for padding and centering
+    const offsetX = padding - minX + (size - contentWidth) / 2;
+    const offsetY = padding - minY + (size - contentHeight) / 2;
+
+    // Move all objects to centered position
+    objects.forEach(obj => {
+        obj.set({
+            left: obj.left + offsetX,
+            top: obj.top + offsetY
+        });
+        obj.setCoords();
+    });
+
+    resizeCanvas();
+}
+
+// Resize canvas to fit container while maintaining content aspect ratio
 function resizeCanvas() {
     const container = document.querySelector('.viewer-canvas-wrapper');
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
 
-    const scale = Math.min(
-        containerWidth / 800,
-        containerHeight / 600
-    ) * 0.9; // 90% of available space
+    // Use base dimensions if set, otherwise default
+    const baseWidth = canvas.baseWidth || 600;
+    const baseHeight = canvas.baseHeight || 600;
 
-    canvas.setWidth(800 * scale);
-    canvas.setHeight(600 * scale);
+    // Calculate scale to fit container (with some margin)
+    const scale = Math.min(
+        containerWidth / baseWidth,
+        containerHeight / baseHeight
+    ) * 0.95; // 95% of available space
+
+    canvas.setWidth(baseWidth * scale);
+    canvas.setHeight(baseHeight * scale);
     canvas.setZoom(scale);
     canvas.renderAll();
 }
@@ -482,6 +539,16 @@ function loadFloorToCanvas(floor) {
     // IMPORTANT: Render canvas after loading objects
     if (totalSvgObjects === 0) {
         canvas.renderAll();
+        // Fit canvas to content after loading
+        setTimeout(() => fitCanvasToContent(), 50);
+    } else {
+        // Wait for SVG loading to complete, then fit
+        const checkSvgLoaded = setInterval(() => {
+            if (svgLoadCount === totalSvgObjects) {
+                clearInterval(checkSvgLoaded);
+                setTimeout(() => fitCanvasToContent(), 50);
+            }
+        }, 100);
     }
 
     // SAFETY: Force render after a short delay
