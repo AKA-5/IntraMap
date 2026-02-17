@@ -328,8 +328,10 @@ function addIcon(iconName) {
 
 // Switch floor
 function switchFloor(floor) {
-    // Save current floor
-    saveCurrentFloorToData();
+    // Save current floor only if it exists in buildingData
+    if (buildingData.floors[currentFloor]) {
+        saveCurrentFloorToData();
+    }
 
     // Update current floor
     currentFloor = floor;
@@ -663,11 +665,17 @@ function loadDraftFromLocalStorage() {
             document.getElementById('buildingName').value = buildingData.name || '';
             updateFloorCounter();
             
-            // Render floor tabs and switch to first floor
-            renderFloorTabs();
+            // Update currentFloor first, then render tabs and load
             const firstFloorKey = Object.keys(buildingData.floors)[0];
             if (firstFloorKey) {
-                switchFloor(firstFloorKey);
+                currentFloor = firstFloorKey;
+                renderFloorTabs();
+                loadFloorToCanvas(firstFloorKey);
+                
+                // Update active tab
+                document.querySelectorAll('.floor-tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.floor === firstFloorKey);
+                });
             }
             
             updateAutoSaveIndicator('saved');
@@ -747,10 +755,18 @@ async function loadFromCloud() {
         // Update floor counter based on loaded data
         updateFloorCounter();
         
-        // Render floor tabs and switch to first floor
-        renderFloorTabs();
+        // Update currentFloor first, then render tabs and load
         const firstFloorKey = Object.keys(buildingData.floors)[0];
-        switchFloor(firstFloorKey);
+        if (firstFloorKey) {
+            currentFloor = firstFloorKey;
+            renderFloorTabs();
+            loadFloorToCanvas(firstFloorKey);
+            
+            // Update active tab
+            document.querySelectorAll('.floor-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.floor === firstFloorKey);
+            });
+        }
         
         showToast('Building loaded successfully!', 'success');
     } catch (error) {
@@ -780,12 +796,18 @@ async function loadDemoData() {
         // Update floor counter based on loaded data
         updateFloorCounter();
         
-        // Render floor tabs and load first floor
-        renderFloorTabs();
-        
-        // Get first floor key and switch to it properly
+        // Update currentFloor first, then render tabs and load
         const firstFloorKey = Object.keys(buildingData.floors)[0];
-        switchFloor(firstFloorKey);
+        if (firstFloorKey) {
+            currentFloor = firstFloorKey;
+            renderFloorTabs();
+            loadFloorToCanvas(firstFloorKey);
+            
+            // Update active tab
+            document.querySelectorAll('.floor-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.floor === firstFloorKey);
+            });
+        }
         
         showToast('Demo data loaded! Explore Centaurus Shopping Mall', 'success');
     } catch (error) {

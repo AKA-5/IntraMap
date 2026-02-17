@@ -1,15 +1,14 @@
 /* Viewer Specific Styles */
 body {
     margin: 0;
-    overflow-x: hidden;
-    overflow-y: auto;  /* Allow vertical scrolling */
+    overflow: hidden;  /* Desktop: no scrolling */
     background: var(--gray-900);
 }
 
 .viewer-container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;  /* Changed from height to min-height */
+    height: 100vh;  /* Desktop: fixed height */
 }
 
 /* Top Bar */
@@ -197,9 +196,8 @@ body {
 .viewer-canvas-container {
     flex: 1;
     position: relative;
-    overflow: visible;  /* Changed from hidden to visible */
+    overflow: hidden;  /* Desktop: hidden */
     background: var(--gray-100);
-    min-height: 500px;  /* Ensure minimum height */
 }
 
 .viewer-canvas-wrapper {
