@@ -26,7 +26,9 @@ function initializeCanvas() {
         stopContextMenu: false,
         renderOnAddRemove: true,
         hoverCursor: 'default',
-        moveCursor: 'default'
+        moveCursor: 'default',
+        perPixelTargetFind: true,  // Precise click detection on actual shape, not bounding box
+        targetFindTolerance: 4      // Small tolerance for easier clicking on thin borders
     });
 
     // Handle object clicks
@@ -460,7 +462,6 @@ function loadFloorToCanvas(floor) {
     // Track SVG loading
     let totalSvgObjects = 0;
     let svgLoadCount = 0;
-    let lastRectWithLabel = null; // Track the last rectangle with a label
 
     floorData.objects.forEach((objData, index) => {
         let obj;
@@ -468,32 +469,20 @@ function loadFloorToCanvas(floor) {
         switch (objData.type) {
             case 'rect':
                 obj = new fabric.Rect(objData);
-                // Track if this rect has a label for next text object
-                if (objData.objectLabel) {
-                    lastRectWithLabel = objData;
-                }
                 break;
             case 'circle':
                 obj = new fabric.Circle(objData);
-                if (objData.objectLabel) {
-                    lastRectWithLabel = objData;
-                }
                 break;
             case 'i-text':
                 obj = new fabric.IText(objData.text || '', objData);
-                // Inherit objectLabel from previous rectangle/shape to make text clickable
-                if (lastRectWithLabel && !objData.objectLabel) {
-                    obj.objectLabel = lastRectWithLabel.objectLabel;
-                    obj.objectTags = lastRectWithLabel.objectTags;
-                    obj.objectIcon = lastRectWithLabel.objectIcon;
-                    // Make the text area clickable with pointer cursor
-                    obj.set({
-                        selectable: false,
-                        evented: true,
-                        hoverCursor: 'pointer',
-                        moveCursor: 'pointer'
-                    });
-                }
+                // Don't make text clickable - only shapes should be clickable
+                // This prevents click conflicts when text is positioned near shapes
+                obj.set({
+                    selectable: false,
+                    evented: false,
+                    hoverCursor: 'default',
+                    moveCursor: 'default'
+                });
                 break;
             case 'line':
                 obj = new fabric.Line([objData.x1, objData.y1, objData.x2, objData.y2], objData);
@@ -516,12 +505,12 @@ function loadFloorToCanvas(floor) {
                                 ...objData,
                                 fill: iconColor,
                                 selectable: false,
-                                evented: true,
+                                evented: false,  // Icons are not clickable - only rectangles are
                                 objectLabel: objData.objectLabel,
                                 objectTags: objData.objectTags,
                                 objectIcon: objData.objectIcon,
-                                hoverCursor: 'pointer',
-                                moveCursor: 'pointer'
+                                hoverCursor: 'default',
+                                moveCursor: 'default'
                             });
                             canvas.add(obj);
                             allObjects.push(obj);
