@@ -252,73 +252,6 @@ body {
     gap: var(--spacing-xs);
 }
 
-.you-are-here-btn {
-    background: var(--primary-blue);
-    color: white;
-    border: none;
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-base);
-    box-shadow: var(--shadow-md);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    justify-content: center;
-}
-
-.you-are-here-btn svg {
-    flex-shrink: 0;
-}
-
-.you-are-here-btn span {
-    white-space: nowrap;
-}
-
-.you-are-here-btn:hover {
-    background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
-}
-
-.you-are-here-btn.active {
-    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
-    animation: pulse 2s infinite;
-    box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);
-}
-
-.clear-marker-btn {
-    background: var(--danger);
-    color: white;
-    border: none;
-    padding: 10px 14px;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all var(--transition-base);
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    justify-content: center;
-}
-
-.clear-marker-btn svg {
-    flex-shrink: 0;
-}
-
-.clear-marker-btn span {
-    white-space: nowrap;
-}
-
-.clear-marker-btn:hover {
-    background: #DC2626;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
 @keyframes pulse {
 
     0%,
@@ -845,17 +778,6 @@ body {
     }
 
     /* Buttons - Compact Touch Targets */
-    .you-are-here-btn,
-    .clear-marker-btn {
-        min-height: 36px;
-        min-width: auto;
-        padding: 8px 12px;
-        font-size: 12px;
-        flex: 1 1 auto;  /* Grow to fill space */
-        justify-content: center;
-        white-space: nowrap;
-    }
-    
     .control-btn,
     .help-btn {
         min-height: 36px;

@@ -1,12 +1,10 @@
 // IntraMap - Viewer Logic
-// Handles floor plan viewing and navigation
+// Handles floor plan viewing and search
 
 let canvas;
 let buildingData = null;
 let currentFloor = 'ground';
 let allObjects = [];
-let youAreHereMarker = null;
-let youAreHereMode = false;
 let selectedObject = null;
 let highlightedObjects = [];
 
@@ -23,20 +21,27 @@ function initializeCanvas() {
         backgroundColor: '#FFFFFF',
         selection: false,
         interactive: true,
-        enableRetinaScaling: true, // Better quality on high-DPI displays
-        allowTouchScrolling: true, // Enable touch scrolling
-        stopContextMenu: false, // Allow native scrolling on mobile
-        renderOnAddRemove: true
+        enableRetinaScaling: true,
+        allowTouchScrolling: false, // Disable to allow scroll container to handle
+        stopContextMenu: false,
+        renderOnAddRemove: true,
+        hoverCursor: 'default',
+        moveCursor: 'default'
     });
 
     // Handle object clicks
     canvas.on('mouse:down', (e) => {
-        if (youAreHereMode) {
-            // Get accurate canvas coordinates accounting for zoom/pan
-            const pointer = canvas.getPointer(e.e);
-            placeYouAreHere(pointer.x, pointer.y);
-        } else if (e.target && e.target.objectLabel) {
-            showObjectDetails(e.target); // Fixed function name
+        if (e.target && e.target.objectLabel) {
+            showObjectDetails(e.target);
+        }
+    });
+
+    // Update cursor on mouse move
+    canvas.on('mouse:move', (e) => {
+        if (e.target && e.target.objectLabel) {
+            canvas.defaultCursor = 'pointer';
+        } else {
+            canvas.defaultCursor = 'default';
         }
     });
 
@@ -305,9 +310,6 @@ function initializeKeyboardShortcuts() {
         if (e.key === 'Escape') {
             closePopup();
             clearHighlights();
-            if (youAreHereMode) {
-                toggleYouAreHere();
-            }
             // Close keyboard help overlay if open
             const keyboardHelp = document.getElementById('keyboardHelpOverlay');
             if (keyboardHelp && keyboardHelp.style.display === 'flex') {
@@ -359,16 +361,6 @@ function initializeKeyboardShortcuts() {
         if (e.key === '0') {
             e.preventDefault();
             resetView();
-        }
-
-        // C - Clear marker (not Ctrl+C to avoid conflict)
-        if (e.key === 'c' && !e.ctrlKey && !e.metaKey) {
-            clearMarker();
-        }
-
-        // M - Toggle "You Are Here" mode
-        if (e.key === 'm' || e.key === 'M') {
-            toggleYouAreHere();
         }
     });
 }
@@ -498,7 +490,8 @@ function loadFloorToCanvas(floor) {
                     obj.set({
                         selectable: false,
                         evented: true,
-                        hoverCursor: 'pointer'
+                        hoverCursor: 'pointer',
+                        moveCursor: 'pointer'
                     });
                 }
                 break;
@@ -523,10 +516,12 @@ function loadFloorToCanvas(floor) {
                                 ...objData,
                                 fill: iconColor,
                                 selectable: false,
+                                evented: true,
                                 objectLabel: objData.objectLabel,
                                 objectTags: objData.objectTags,
                                 objectIcon: objData.objectIcon,
-                                hoverCursor: 'pointer'
+                                hoverCursor: 'pointer',
+                                moveCursor: 'pointer'
                             });
                             canvas.add(obj);
                             allObjects.push(obj);
@@ -553,7 +548,9 @@ function loadFloorToCanvas(floor) {
         if (obj) {
             obj.set({
                 selectable: false,
-                hoverCursor: objData.objectLabel ? 'pointer' : 'default'
+                evented: objData.objectLabel ? true : false,
+                hoverCursor: objData.objectLabel ? 'pointer' : 'default',
+                moveCursor: objData.objectLabel ? 'pointer' : 'default'
             });
             canvas.add(obj);
             allObjects.push(obj);
@@ -794,119 +791,22 @@ function closePopup() {
     selectedObject = null;
 }
 
-// Toggle "You Are Here" mode
+// Disabled: You Are Here feature removed for simplicity
+// Users can simply search and view locations
 function toggleYouAreHere() {
-    youAreHereMode = !youAreHereMode;
-    const btn = document.getElementById('youAreHereBtn');
-    const btnText = btn.querySelector('span');
-
-    if (youAreHereMode) {
-        btn.classList.add('active');
-        if (btnText) btnText.textContent = 'Tap on map...';
-        showToast('Tap on the map to place your location', 'info');
-    } else {
-        btn.classList.remove('active');
-        if (btnText) btnText.textContent = 'You Are Here';
-    }
+    // Feature disabled
 }
 
-// Place "You Are Here" marker - Professional location pin
 function placeYouAreHere(x, y) {
-    // Remove existing marker
-    if (youAreHereMarker) {
-        canvas.remove(youAreHereMarker);
-    }
-
-    // Create professional location pin marker using SVG path
-    const pinPath = 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z';
-    
-    youAreHereMarker = new fabric.Path(pinPath, {
-        left: x - 12,
-        top: y - 24, // Adjust so pin points to location
-        fill: '#EF4444',
-        stroke: '#FFFFFF',
-        strokeWidth: 1.5,
-        scaleX: 1.5,
-        scaleY: 1.5,
-        selectable: false,
-        evented: false,
-        shadow: new fabric.Shadow({
-            color: 'rgba(0,0,0,0.4)',
-            blur: 12,
-            offsetX: 0,
-            offsetY: 3
-        })
-    });
-
-    canvas.add(youAreHereMarker);
-    canvas.bringToFront(youAreHereMarker);
-    canvas.renderAll();
-
-    // Exit "You Are Here" mode
-    youAreHereMode = false;
-    const btn = document.getElementById('youAreHereBtn');
-    const btnText = btn.querySelector('span');
-    btn.classList.remove('active');
-    if (btnText) btnText.textContent = 'You Are Here';
-
-    // Show clear button
-    document.getElementById('clearMarkerBtn').style.display = 'flex';
-
-    showToast('Location marked!', 'success');
+    // Feature disabled
 }
 
-// Clear "You Are Here" marker
 function clearMarker() {
-    if (youAreHereMarker) {
-        canvas.remove(youAreHereMarker);
-        youAreHereMarker = null;
-        canvas.renderAll();
-        
-        // Hide clear button
-        document.getElementById('clearMarkerBtn').style.display = 'none';
-        
-        showToast('Marker cleared', 'info');
-    }
+    // Feature disabled
 }
 
-// Get directions
 function getDirections() {
-    if (!selectedObject || !youAreHereMarker) {
-        if (!youAreHereMarker) {
-            showToast('Please set your location first using "You Are Here"', 'info');
-            toggleYouAreHere();
-        }
-        return;
-    }
-
-    // Simple visual highlight from current location to destination
-    const start = youAreHereMarker.getCenterPoint();
-    const end = selectedObject.getCenterPoint();
-
-    // Create path line
-    const line = new fabric.Line([start.x, start.y, end.x, end.y], {
-        stroke: '#3B82F6',
-        strokeWidth: 4,
-        strokeDashArray: [10, 5],
-        selectable: false,
-        evented: false
-    });
-
-    canvas.add(line);
-    canvas.sendToBack(line);
-    canvas.renderAll();
-
-    // Highlight destination
-    highlightObject(selectedObject);
-
-    showToast('Route highlighted on map', 'success');
-    closePopup();
-
-    // Remove line after 5 seconds
-    setTimeout(() => {
-        canvas.remove(line);
-        canvas.renderAll();
-    }, 5000);
+    // Feature disabled
 }
 
 // Zoom controls
