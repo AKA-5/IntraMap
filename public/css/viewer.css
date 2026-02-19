@@ -722,6 +722,7 @@ body {
         -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
         background: var(--gray-100);
         overscroll-behavior: contain;  /* Prevent pull-to-refresh */
+        touch-action: pan-x pan-y;  /* Allow finger scrolling */
     }
     
     /* Canvas wrapper - scrollable with proper padding */
@@ -739,7 +740,7 @@ body {
     
     #viewerCanvas {
         display: block;
-        touch-action: none;  /* Let container handle all touch events */
+        touch-action: none;  /* Prevent canvas from handling touch, let wrapper handle it */
         margin: 0 auto;  /* Center canvas */
         pointer-events: auto;  /* Allow clicks on canvas */
     }
