@@ -25,7 +25,8 @@ function initializeCanvas() {
         interactive: true,
         enableRetinaScaling: true, // Better quality on high-DPI displays
         allowTouchScrolling: true, // Enable touch scrolling
-        stopContextMenu: true // Prevent context menu on long press
+        stopContextMenu: false, // Allow native scrolling on mobile
+        renderOnAddRemove: true
     });
 
     // Handle object clicks

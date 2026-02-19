@@ -75,7 +75,7 @@ const IconMetadata = {
   restaurant: { category: 'food', color: '#3B82F6', label: 'Restaurant' },
   cafe: { category: 'food', color: '#3B82F6', label: 'Cafe' },
   restroom: { category: 'restroom', color: '#10B981', label: 'Restroom' },
-  exit: { category: 'exit', color: '#EF4444', label: 'Exit' },
+  exit: { category: 'exit', color: '#DC2626', label: 'Exit' },
   stairs: { category: 'navigation', color: '#6B7280', label: 'Stairs' },
   elevator: { category: 'navigation', color: '#6B7280', label: 'Elevator' },
   atm: { category: 'service', color: '#F59E0B', label: 'ATM' },
