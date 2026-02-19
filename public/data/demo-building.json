@@ -585,7 +585,7 @@
                     "ry": 6,
                     "objectLabel": "Cafe Corner",
                     "objectTags": "cafe, coffee, drinks, snacks, beverages",
-                    "objectIcon": "cafe",
+                    "objectIcon": null,
                     "objectLocked": false
                 },
                 {
@@ -1008,7 +1008,7 @@
                     "ry": 8,
                     "objectLabel": "Cinema Hall 1",
                     "objectTags": "cinema, movie, theater, entertainment, film, screen",
-                    "objectIcon": "cafe",
+                    "objectIcon": null,
                     "objectLocked": false
                 },
                 {
@@ -1043,7 +1043,7 @@
                     "ry": 8,
                     "objectLabel": "Cinema Hall 2",
                     "objectTags": "cinema, movie, theater, entertainment, film, screen",
-                    "objectIcon": "cafe",
+                    "objectIcon": null,
                     "objectLocked": false
                 },
                 {
@@ -1113,7 +1113,7 @@
                     "ry": 8,
                     "objectLabel": "Game Zone",
                     "objectTags": "games, arcade, entertainment, gaming, fun, play",
-                    "objectIcon": "cafe",
+                    "objectIcon": null,
                     "objectLocked": false
                 },
                 {
@@ -1148,7 +1148,7 @@
                     "ry": 6,
                     "objectLabel": "Snack Bar",
                     "objectTags": "food, snacks, popcorn, drinks, cafe, concession",
-                    "objectIcon": "cafe",
+                    "objectIcon": null,
                     "objectLocked": false
                 },
                 {
@@ -1183,7 +1183,7 @@
                     "ry": 6,
                     "objectLabel": "First Aid",
                     "objectTags": "medical, first aid, health, emergency, clinic",
-                    "objectIcon": "medical",
+                    "objectIcon": null,
                     "objectLocked": false
                 },
                 {
@@ -1218,7 +1218,7 @@
                     "ry": 6,
                     "objectLabel": "Security Office",
                     "objectTags": "security, safety, office, help, protection",
-                    "objectIcon": "security",
+                    "objectIcon": null,
                     "objectLocked": false
                 },
                 {

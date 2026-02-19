@@ -223,22 +223,12 @@ function fitCanvasToContent() {
     // Make it square - use the larger dimension
     const size = Math.max(contentWidth, contentHeight, 400); // Minimum 400px
 
-    // Store base dimensions
+    // Store base dimensions - don't move objects, they're already positioned correctly
     canvas.baseWidth = size;
     canvas.baseHeight = size;
 
-    // Adjust object positions to account for padding and centering
-    const offsetX = padding - minX + (size - contentWidth) / 2;
-    const offsetY = padding - minY + (size - contentHeight) / 2;
-
-    // Move all objects to centered position
-    objects.forEach(obj => {
-        obj.set({
-            left: obj.left + offsetX,
-            top: obj.top + offsetY
-        });
-        obj.setCoords();
-    });
+    // Reset viewport to show everything
+    canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
 
     resizeCanvas();
 }
