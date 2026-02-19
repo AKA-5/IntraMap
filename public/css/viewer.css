@@ -612,7 +612,7 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-    /* Fix mobile scrolling - prevent white space expansion */
+    /* Fix mobile scrolling - prevent body scroll but allow canvas container scroll */
     body {
         overflow: hidden;  /* Prevent body scroll */
         -webkit-overflow-scrolling: touch;
@@ -627,6 +627,8 @@ body {
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        width: 100%;
+        position: relative;
     }
     
     /* Hide version indicator on mobile */
@@ -716,9 +718,10 @@ body {
     .viewer-canvas-container {
         flex: 1;  /* Take remaining space */
         position: relative;
-        overflow: auto;  /* Enable scrolling */
+        overflow: auto !important;  /* Enable scrolling */
         -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
         background: var(--gray-100);
+        overscroll-behavior: contain;  /* Prevent pull-to-refresh */
     }
     
     /* Canvas wrapper - scrollable with proper padding */
@@ -728,15 +731,17 @@ body {
         min-width: 100%;  /* At least full width */
         min-height: 100%;  /* At least full height */
         display: flex;
-        align-items: center;
+        align-items: flex-start;  /* Top align on mobile */
         justify-content: center;
-        padding: var(--spacing-xl);  /* Generous padding for scrolling */
+        padding: 20px;  /* Padding for scrolling */
+        box-sizing: border-box;
     }
     
     #viewerCanvas {
         display: block;
-        touch-action: pan-x pan-y;  /* Allow panning, enable scrolling */
+        touch-action: none;  /* Let container handle all touch events */
         margin: 0 auto;  /* Center canvas */
+        pointer-events: auto;  /* Allow clicks on canvas */
     }
 
     /* Controls - Compact, Fixed at Bottom */

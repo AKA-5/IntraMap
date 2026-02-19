@@ -294,41 +294,66 @@ function addShapeAtPosition(x, y) {
 
 // Add icon to canvas
 function addIcon(iconName) {
+    if (!Icons[iconName]) {
+        showToast(`Icon "${iconName}" not found`, 'error');
+        console.error('Icon not found:', iconName);
+        return;
+    }
+
+    if (!IconMetadata[iconName]) {
+        showToast(`Icon metadata for "${iconName}" not found`, 'error');
+        console.error('Icon metadata not found:', iconName);
+        return;
+    }
+
     const meta = IconMetadata[iconName];
     
     // Save state BEFORE adding icon for undo
     saveState();
 
-    // Create icon as SVG path
-    fabric.loadSVGFromString(Icons[iconName], (objects, options) => {
-        const icon = fabric.util.groupSVGElements(objects, options);
-        
-        // Apply color to all paths in the icon group
-        icon.forEachObject((obj) => {
-            obj.set({ fill: meta.color });
-        });
+    try {
+        // Create icon as SVG path
+        fabric.loadSVGFromString(Icons[iconName], (objects, options) => {
+            if (!objects || objects.length === 0) {
+                showToast('Failed to load icon SVG', 'error');
+                console.error('No SVG objects loaded for icon:', iconName);
+                return;
+            }
 
-        icon.set({
-            left: 400,
-            top: 300,
-            scaleX: 2,
-            scaleY: 2,
-            fill: meta.color,
-            objectLabel: meta.label,
-            objectTags: meta.category,
-            objectIcon: iconName,
-            objectLocked: false
-        });
+            const icon = fabric.util.groupSVGElements(objects, options);
+            
+            // Apply color to all paths in the icon group
+            icon.forEachObject((obj) => {
+                obj.set({ fill: meta.color });
+            });
 
-        canvas.add(icon);
-        canvas.setActiveObject(icon);
-        canvas.renderAll();
-        saveCurrentFloorToData();
-        triggerAutoSave();
-        
-        // Auto-switch back to select mode after adding icon
-        selectTool('select');
-    });
+            icon.set({
+                left: 400,
+                top: 300,
+                scaleX: 2,
+                scaleY: 2,
+                fill: meta.color,
+                objectLabel: meta.label,
+                objectTags: meta.category,
+                objectIcon: iconName,
+                objectLocked: false
+            });
+
+            canvas.add(icon);
+            canvas.setActiveObject(icon);
+            canvas.renderAll();
+            saveCurrentFloorToData();
+            triggerAutoSave();
+            
+            showToast(`Added ${meta.label}`, 'success');
+            
+            // Auto-switch back to select mode after adding icon
+            selectTool('select');
+        });
+    } catch (error) {
+        showToast('Error adding icon', 'error');
+        console.error('Error in addIcon:', error);
+    }
 }
 
 // Switch floor

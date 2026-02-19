@@ -199,6 +199,7 @@ function fitCanvasToContent() {
         // Default size if no objects
         canvas.baseWidth = 600;
         canvas.baseHeight = 600;
+        canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
         resizeCanvas();
         return;
     }
@@ -216,21 +217,39 @@ function fitCanvasToContent() {
     });
 
     // Calculate content dimensions with padding
-    const padding = 100; // Padding around content
+    const padding = 50; // Padding around content
     const contentWidth = (maxX - minX) + (padding * 2);
     const contentHeight = (maxY - minY) + (padding * 2);
 
-    // Make it square - use the larger dimension
-    const size = Math.max(contentWidth, contentHeight, 400); // Minimum 400px
+    // Use actual content dimensions (don't force square)
+    canvas.baseWidth = Math.max(contentWidth, 400);
+    canvas.baseHeight = Math.max(contentHeight, 400);
 
-    // Store base dimensions - don't move objects, they're already positioned correctly
-    canvas.baseWidth = size;
-    canvas.baseHeight = size;
+    // Center all objects by adjusting their positions
+    const offsetX = padding - minX;
+    const offsetY = padding - minY;
 
-    // Reset viewport to show everything
+    if (offsetX !== 0 || offsetY !== 0) {
+        objects.forEach(obj => {
+            obj.set({
+                left: obj.left + offsetX,
+                top: obj.top + offsetY
+            });
+            obj.setCoords();
+        });
+    }
+
+    // Reset viewport to origin
     canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
 
     resizeCanvas();
+    
+    // Reset container scroll position to top-left (especially important on mobile)
+    const container = document.querySelector('.viewer-canvas-container');
+    if (container) {
+        container.scrollTop = 0;
+        container.scrollLeft = 0;
+    }
 }
 
 // Resize canvas to fit container while maintaining content aspect ratio
