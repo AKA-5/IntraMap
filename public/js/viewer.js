@@ -504,11 +504,16 @@ function loadFloorToCanvas(floor) {
                         const iconMeta = IconMetadata[objData.objectIcon];
                         const iconColor = objData.fill || (iconMeta ? iconMeta.color : '#000000');
                         
-                        fabric.loadSVGFromString(Icons[objData.objectIcon], (objects, options) => {
+                        // Replace "currentColor" with actual color for Fabric.js compatibility
+                        const svgString = Icons[objData.objectIcon].replace(/currentColor/g, iconColor);
+                        
+                        fabric.loadSVGFromString(svgString, (objects, options) => {
                             obj = fabric.util.groupSVGElements(objects, options);
                             // Apply color to all paths in the group
                             obj.forEachObject((o) => {
-                                o.set({ fill: iconColor });
+                                if (o.type === 'path' || o.type === 'circle') {
+                                    o.set({ fill: iconColor });
+                                }
                             });
                             obj.set({
                                 ...objData,

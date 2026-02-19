@@ -312,8 +312,11 @@ function addIcon(iconName) {
     saveState();
 
     try {
+        // Replace "currentColor" with actual color for Fabric.js compatibility
+        const svgString = Icons[iconName].replace(/currentColor/g, meta.color);
+        
         // Create icon as SVG path
-        fabric.loadSVGFromString(Icons[iconName], (objects, options) => {
+        fabric.loadSVGFromString(svgString, (objects, options) => {
             if (!objects || objects.length === 0) {
                 showToast('Failed to load icon SVG', 'error');
                 console.error('No SVG objects loaded for icon:', iconName);
@@ -322,9 +325,11 @@ function addIcon(iconName) {
 
             const icon = fabric.util.groupSVGElements(objects, options);
             
-            // Apply color to all paths in the icon group
+            // Ensure color is applied to all paths in the icon group
             icon.forEachObject((obj) => {
-                obj.set({ fill: meta.color });
+                if (obj.type === 'path' || obj.type === 'circle') {
+                    obj.set({ fill: meta.color });
+                }
             });
 
             icon.set({
@@ -439,11 +444,16 @@ function loadFloorToCanvas(floor) {
                     const iconMeta = IconMetadata[objData.objectIcon];
                     const iconColor = objData.fill || (iconMeta ? iconMeta.color : '#000000');
                     
-                    fabric.loadSVGFromString(Icons[objData.objectIcon], (objects, options) => {
+                    // Replace "currentColor" with actual color for Fabric.js compatibility
+                    const svgString = Icons[objData.objectIcon].replace(/currentColor/g, iconColor);
+                    
+                    fabric.loadSVGFromString(svgString, (objects, options) => {
                         obj = fabric.util.groupSVGElements(objects, options);
                         // Apply color to all paths in the group
                         obj.forEachObject((o) => {
-                            o.set({ fill: iconColor });
+                            if (o.type === 'path' || o.type === 'circle') {
+                                o.set({ fill: iconColor });
+                            }
                         });
                         obj.set({
                             ...objData,
