@@ -509,12 +509,20 @@ function loadFloorToCanvas(floor) {
                         
                         fabric.loadSVGFromString(svgString, (objects, options) => {
                             obj = fabric.util.groupSVGElements(objects, options);
-                            // Apply color to all paths in the group
-                            obj.forEachObject((o) => {
-                                if (o.type === 'path' || o.type === 'circle') {
-                                    o.set({ fill: iconColor });
-                                }
-                            });
+                            
+                            // Apply color to all paths (handle both single path and group)
+                            if (obj.forEachObject) {
+                                // It's a group with multiple paths
+                                obj.forEachObject((o) => {
+                                    if (o.type === 'path' || o.type === 'circle') {
+                                        o.set({ fill: iconColor });
+                                    }
+                                });
+                            } else {
+                                // It's a single path object
+                                obj.set({ fill: iconColor });
+                            }
+                            
                             obj.set({
                                 ...objData,
                                 fill: iconColor,

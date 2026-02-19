@@ -334,19 +334,25 @@ function addIcon(iconName) {
         const icon = fabric.util.groupSVGElements(objects, options);
         console.log('Created icon group:', icon);
         
-        // Ensure color is applied to all paths in the icon group
-        icon.forEachObject((obj) => {
-            if (obj.type === 'path' || obj.type === 'circle') {
-                obj.set({ fill: meta.color });
-            }
-        });
+        // Ensure color is applied to all paths in the icon
+        // Single path SVGs return a Path object, multiple paths return a Group
+        if (icon.forEachObject) {
+            // It's a group with multiple paths
+            icon.forEachObject((obj) => {
+                if (obj.type === 'path' || obj.type === 'circle') {
+                    obj.set({ fill: meta.color });
+                }
+            });
+        } else {
+            // It's a single path object
+            icon.set({ fill: meta.color });
+        }
 
         icon.set({
             left: 400,
             top: 300,
             scaleX: 2,
             scaleY: 2,
-            fill: meta.color,
             objectLabel: meta.label,
             objectTags: meta.category,
             objectIcon: iconName,
@@ -457,12 +463,20 @@ function loadFloorToCanvas(floor) {
                     
                     fabric.loadSVGFromString(svgString, (objects, options) => {
                         obj = fabric.util.groupSVGElements(objects, options);
-                        // Apply color to all paths in the group
-                        obj.forEachObject((o) => {
-                            if (o.type === 'path' || o.type === 'circle') {
-                                o.set({ fill: iconColor });
-                            }
-                        });
+                        
+                        // Apply color to all paths (handle both single path and group)
+                        if (obj.forEachObject) {
+                            // It's a group with multiple paths
+                            obj.forEachObject((o) => {
+                                if (o.type === 'path' || o.type === 'circle') {
+                                    o.set({ fill: iconColor });
+                                }
+                            });
+                        } else {
+                            // It's a single path object
+                            obj.set({ fill: iconColor });
+                        }
+                        
                         obj.set({
                             ...objData,
                             fill: iconColor
