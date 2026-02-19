@@ -510,10 +510,18 @@ function loadFloorToCanvas(floor) {
                     // SVG Icon handling
                     if (Icons[objData.objectIcon]) {
                         totalSvgObjects++;
+                        const iconMeta = IconMetadata[objData.objectIcon];
+                        const iconColor = objData.fill || (iconMeta ? iconMeta.color : '#000000');
+                        
                         fabric.loadSVGFromString(Icons[objData.objectIcon], (objects, options) => {
                             obj = fabric.util.groupSVGElements(objects, options);
+                            // Apply color to all paths in the group
+                            obj.forEachObject((o) => {
+                                o.set({ fill: iconColor });
+                            });
                             obj.set({
                                 ...objData,
+                                fill: iconColor,
                                 selectable: false,
                                 objectLabel: objData.objectLabel,
                                 objectTags: objData.objectTags,
@@ -790,14 +798,15 @@ function closePopup() {
 function toggleYouAreHere() {
     youAreHereMode = !youAreHereMode;
     const btn = document.getElementById('youAreHereBtn');
+    const btnText = btn.querySelector('span');
 
     if (youAreHereMode) {
         btn.classList.add('active');
-        btn.textContent = '📍 Tap on map...';
+        if (btnText) btnText.textContent = 'Tap on map...';
         showToast('Tap on the map to place your location', 'info');
     } else {
         btn.classList.remove('active');
-        btn.textContent = '📍 You Are Here';
+        if (btnText) btnText.textContent = 'You Are Here';
     }
 }
 
@@ -836,8 +845,9 @@ function placeYouAreHere(x, y) {
     // Exit "You Are Here" mode
     youAreHereMode = false;
     const btn = document.getElementById('youAreHereBtn');
+    const btnText = btn.querySelector('span');
     btn.classList.remove('active');
-    btn.textContent = '📍 You Are Here';
+    if (btnText) btnText.textContent = 'You Are Here';
 
     // Show clear button
     document.getElementById('clearMarkerBtn').style.display = 'flex';

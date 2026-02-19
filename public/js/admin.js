@@ -302,6 +302,11 @@ function addIcon(iconName) {
     // Create icon as SVG path
     fabric.loadSVGFromString(Icons[iconName], (objects, options) => {
         const icon = fabric.util.groupSVGElements(objects, options);
+        
+        // Apply color to all paths in the icon group
+        icon.forEachObject((obj) => {
+            obj.set({ fill: meta.color });
+        });
 
         icon.set({
             left: 400,
@@ -405,10 +410,20 @@ function loadFloorToCanvas(floor) {
                 break;
             default:
                 if (objData.objectIcon) {
-                    // Recreate icon from SVG
+                    // Recreate icon from SVG with proper color
+                    const iconMeta = IconMetadata[objData.objectIcon];
+                    const iconColor = objData.fill || (iconMeta ? iconMeta.color : '#000000');
+                    
                     fabric.loadSVGFromString(Icons[objData.objectIcon], (objects, options) => {
                         obj = fabric.util.groupSVGElements(objects, options);
-                        obj.set(objData);
+                        // Apply color to all paths in the group
+                        obj.forEachObject((o) => {
+                            o.set({ fill: iconColor });
+                        });
+                        obj.set({
+                            ...objData,
+                            fill: iconColor
+                        });
                         canvas.add(obj);
                     });
                     return;
