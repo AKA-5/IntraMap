@@ -7,25 +7,25 @@ const Icons = {
     <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
   </svg>`,
 
-  // Restroom icon
+  // Restroom icon - Simplified and cleaner
   restroom: `<svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M9 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-1 8v11H6V11H4v10H2V10c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v1h-2v-1H8zm7-8c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm1 18h-4v-8H9.5v-2c0-1.1.9-2 2-2h7c1.1 0 2 .9 2 2v2H18v8h-2z"/>
+    <path d="M5.5 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm1.5 18h-4V9h4v11zm8.5-18c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm2.5 18H14v-6h-2V8c0-.55.45-1 1-1h4c.55 0 1 .45 1 1v6h-2v6z"/>
   </svg>`,
 
-  // Exit/Emergency icon
+  // Exit/Emergency icon - Professional exit sign with running person and arrow
   exit: `<svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v4H7zm4-1h2v6h-2zm4 3h2v3h-2z"/>
-    <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59z"/>
+    <path d="M14 2H2v20h12V2zm-4 17H4V5h6v14zm10 0.5l-2.5-2.5L20 14.5V11h-6V8.5l4.5 4.5L16 15.5l4 4z"/>
+    <path d="M6 8h4v1.5H6V8zm0 2.5h4V12H6v-1.5zm0 2.5h4v1.5H6V13z"/>
   </svg>`,
 
-  // Stairs icon
+  // Stairs icon - With actual stair steps (vertical and horizontal lines)
   stairs: `<svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-4-8h-3V8h-2v3H7v2h3v3h2v-3h3z"/>
+    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 16h-3v-3h-3v-3h-3v-3H6V7h3v3h3v3h3v3h3v3z"/>
   </svg>`,
 
-  // Elevator icon
+  // Elevator icon - Only up and down arrows, no plus
   elevator: `<svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7.5 15H10v-4H7v-2h3V8h1.5v8zm5-6l-2.5 4-2.5-4h5zm-5-4l2.5-4 2.5 4h-5z"/>
+    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-4-4h8l-4 4zm0-10l4 4H8l4-4z"/>
   </svg>`,
 
   // ATM icon

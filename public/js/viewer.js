@@ -245,11 +245,26 @@ function resizeCanvas() {
     const baseWidth = canvas.baseWidth || 600;
     const baseHeight = canvas.baseHeight || 600;
 
-    // Calculate scale to fit container (with some margin)
-    const scale = Math.min(
-        containerWidth / baseWidth,
-        containerHeight / baseHeight
-    ) * 0.95; // 95% of available space
+    // Detect mobile device
+    const isMobile = window.innerWidth <= 768;
+
+    // Calculate scale to fit container
+    let scale;
+    if (isMobile) {
+        // On mobile: fit to width with small margin for better visibility
+        scale = Math.min(
+            (containerWidth - 32) / baseWidth,  // 32px total horizontal margin
+            (containerHeight - 32) / baseHeight  // 32px total vertical margin
+        );
+        // Ensure minimum scale on mobile for readability
+        scale = Math.max(scale, 0.5);
+    } else {
+        // On desktop: fit with 95% of available space
+        scale = Math.min(
+            containerWidth / baseWidth,
+            containerHeight / baseHeight
+        ) * 0.95;
+    }
 
     canvas.setWidth(baseWidth * scale);
     canvas.setHeight(baseHeight * scale);
@@ -785,28 +800,31 @@ function toggleYouAreHere() {
     }
 }
 
-// Place "You Are Here" marker
+// Place "You Are Here" marker - Professional location pin
 function placeYouAreHere(x, y) {
     // Remove existing marker
     if (youAreHereMarker) {
         canvas.remove(youAreHereMarker);
     }
 
-    // Create new marker
-    youAreHereMarker = new fabric.Circle({
-        left: x - 15,
-        top: y - 15,
-        radius: 15,
+    // Create professional location pin marker using SVG path
+    const pinPath = 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z';
+    
+    youAreHereMarker = new fabric.Path(pinPath, {
+        left: x - 12,
+        top: y - 24, // Adjust so pin points to location
         fill: '#EF4444',
         stroke: '#FFFFFF',
-        strokeWidth: 3,
+        strokeWidth: 1.5,
+        scaleX: 1.5,
+        scaleY: 1.5,
         selectable: false,
         evented: false,
         shadow: new fabric.Shadow({
-            color: 'rgba(0,0,0,0.3)',
-            blur: 10,
+            color: 'rgba(0,0,0,0.4)',
+            blur: 12,
             offsetX: 0,
-            offsetY: 2
+            offsetY: 3
         })
     });
 
