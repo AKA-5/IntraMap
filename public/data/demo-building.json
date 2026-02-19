@@ -590,7 +590,7 @@
                 },
                 {
                     "type": "i-text",
-                    "text": "Cafe Corner\n☕ Coffee & Snacks",
+                    "text": "Cafe Corner\nCoffee & Snacks",
                     "left": 160,
                     "top": 140,
                     "fontSize": 14,
@@ -695,10 +695,10 @@
                 },
                 {
                     "type": "i-text",
-                    "text": "↕",
+                    "text": "S\nT\nA\nI\nR\nS",
                     "left": 730,
                     "top": 140,
-                    "fontSize": 24,
+                    "fontSize": 10,
                     "fontFamily": "Arial",
                     "fontWeight": "bold",
                     "fill": "#FFFFFF",
@@ -1013,7 +1013,7 @@
                 },
                 {
                     "type": "i-text",
-                    "text": "🎬 Cinema Hall 1\nPremium Screen",
+                    "text": "Cinema Hall 1\nPremium Screen",
                     "left": 185,
                     "top": 160,
                     "fontSize": 16,
@@ -1048,7 +1048,7 @@
                 },
                 {
                     "type": "i-text",
-                    "text": "🎬 Cinema Hall 2\nIMAX Screen",
+                    "text": "Cinema Hall 2\nIMAX Screen",
                     "left": 465,
                     "top": 160,
                     "fontSize": 16,
@@ -1118,7 +1118,7 @@
                 },
                 {
                     "type": "i-text",
-                    "text": "🎮 Game Zone\nArcade & Gaming Center",
+                    "text": "Game Zone\nArcade & Gaming Center",
                     "left": 235,
                     "top": 350,
                     "fontSize": 17,
@@ -1153,7 +1153,7 @@
                 },
                 {
                     "type": "i-text",
-                    "text": "🍿 Snack Bar\nPopcorn & Drinks",
+                    "text": "Snack Bar\nPopcorn & Drinks",
                     "left": 515,
                     "top": 350,
                     "fontSize": 13,
@@ -1258,7 +1258,7 @@
                 },
                 {
                     "type": "i-text",
-                    "text": "🎟 Cinema Ticket Counter",
+                    "text": "Cinema Ticket Counter",
                     "left": 200,
                     "top": 495,
                     "fontSize": 15,
@@ -1328,10 +1328,10 @@
                 },
                 {
                     "type": "i-text",
-                    "text": "↕",
+                    "text": "S\nT\nA\nI\nR\nS",
                     "left": 505,
                     "top": 495,
-                    "fontSize": 22,
+                    "fontSize": 9,
                     "fontFamily": "Arial",
                     "fontWeight": "bold",
                     "fill": "#FFFFFF",
@@ -1363,7 +1363,7 @@
                 },
                 {
                     "type": "i-text",
-                    "text": "⚠ Emergency Exit",
+                    "text": "Emergency Exit",
                     "left": 660,
                     "top": 495,
                     "fontSize": 14,
