@@ -294,6 +294,8 @@ function addShapeAtPosition(x, y) {
 
 // Add icon to canvas
 function addIcon(iconName) {
+    console.log('addIcon called with:', iconName);
+    
     if (!Icons[iconName]) {
         showToast(`Icon "${iconName}" not found`, 'error');
         console.error('Icon not found:', iconName);
@@ -307,58 +309,64 @@ function addIcon(iconName) {
     }
 
     const meta = IconMetadata[iconName];
+    console.log('Icon metadata:', meta);
     
     // Save state BEFORE adding icon for undo
     saveState();
 
-    try {
-        // Replace "currentColor" with actual color for Fabric.js compatibility
-        const svgString = Icons[iconName].replace(/currentColor/g, meta.color);
+    // Replace "currentColor" with actual color for Fabric.js compatibility
+    const svgString = Icons[iconName].replace(/currentColor/g, meta.color);
+    console.log('SVG string after color replacement:', svgString.substring(0, 100));
+    
+    // Create icon as SVG path
+    fabric.loadSVGFromString(svgString, (objects, options) => {
+        console.log('fabric.loadSVGFromString callback fired');
+        console.log('Loaded objects:', objects);
+        console.log('Options:', options);
         
-        // Create icon as SVG path
-        fabric.loadSVGFromString(svgString, (objects, options) => {
-            if (!objects || objects.length === 0) {
-                showToast('Failed to load icon SVG', 'error');
-                console.error('No SVG objects loaded for icon:', iconName);
-                return;
+        if (!objects || objects.length === 0) {
+            showToast('Failed to load icon SVG', 'error');
+            console.error('No SVG objects loaded for icon:', iconName);
+            console.error('SVG String was:', svgString);
+            return;
+        }
+
+        const icon = fabric.util.groupSVGElements(objects, options);
+        console.log('Created icon group:', icon);
+        
+        // Ensure color is applied to all paths in the icon group
+        icon.forEachObject((obj) => {
+            if (obj.type === 'path' || obj.type === 'circle') {
+                obj.set({ fill: meta.color });
             }
-
-            const icon = fabric.util.groupSVGElements(objects, options);
-            
-            // Ensure color is applied to all paths in the icon group
-            icon.forEachObject((obj) => {
-                if (obj.type === 'path' || obj.type === 'circle') {
-                    obj.set({ fill: meta.color });
-                }
-            });
-
-            icon.set({
-                left: 400,
-                top: 300,
-                scaleX: 2,
-                scaleY: 2,
-                fill: meta.color,
-                objectLabel: meta.label,
-                objectTags: meta.category,
-                objectIcon: iconName,
-                objectLocked: false
-            });
-
-            canvas.add(icon);
-            canvas.setActiveObject(icon);
-            canvas.renderAll();
-            saveCurrentFloorToData();
-            triggerAutoSave();
-            
-            showToast(`Added ${meta.label}`, 'success');
-            
-            // Auto-switch back to select mode after adding icon
-            selectTool('select');
         });
-    } catch (error) {
-        showToast('Error adding icon', 'error');
-        console.error('Error in addIcon:', error);
-    }
+
+        icon.set({
+            left: 400,
+            top: 300,
+            scaleX: 2,
+            scaleY: 2,
+            fill: meta.color,
+            objectLabel: meta.label,
+            objectTags: meta.category,
+            objectIcon: iconName,
+            objectLocked: false
+        });
+
+        console.log('Adding icon to canvas at position:', icon.left, icon.top);
+        canvas.add(icon);
+        canvas.setActiveObject(icon);
+        canvas.renderAll();
+        console.log('Canvas rendered, total objects:', canvas.getObjects().length);
+        
+        saveCurrentFloorToData();
+        triggerAutoSave();
+        
+        showToast(`Added ${meta.label}`, 'success');
+        
+        // Auto-switch back to select mode after adding icon
+        selectTool('select');
+    });
 }
 
 // Switch floor
