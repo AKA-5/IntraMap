@@ -82,18 +82,36 @@ function initializeCanvas() {
             vpt[4] += evt.clientX - lastPosX;
             vpt[5] += evt.clientY - lastPosY;
             
-            // Apply pan constraints
+            // Apply pan constraints to limit white space
             const zoom = canvas.getZoom();
             const canvasWidth = canvas.getWidth();
             const canvasHeight = canvas.getHeight();
+            const canvasElem = document.getElementById('floorPlanCanvas');
+            const container = canvasElem?.parentElement;
+            const containerWidth = container ? container.clientWidth : 800;
+            const containerHeight = container ? container.clientHeight : 600;
             
-            const maxPanX = canvasWidth * 0.5;
-            const maxPanY = canvasHeight * 0.5;
-            const minPanX = -canvasWidth * zoom + canvasWidth * 0.5;
-            const minPanY = -canvasHeight * zoom + canvasHeight * 0.5;
+            // Allow small overscroll (100px) but keep content mostly visible
+            const padding = 100;
+            const scaledWidth = canvasWidth * zoom;
+            const scaledHeight = canvasHeight * zoom;
             
-            vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
-            vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+            // If canvas smaller than container, keep centered
+            if (scaledWidth <= containerWidth) {
+                vpt[4] = (containerWidth - canvasWidth) / 2;
+            } else {
+                const maxPanX = padding;
+                const minPanX = containerWidth - scaledWidth - padding;
+                vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
+            }
+            
+            if (scaledHeight <= containerHeight) {
+                vpt[5] = (containerHeight - canvasHeight) / 2;
+            } else {
+                const maxPanY = padding;
+                const minPanY = containerHeight - scaledHeight - padding;
+                vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+            }
             
             canvas.requestRenderAll();
             lastPosX = evt.clientX;
@@ -857,8 +875,11 @@ function zoomOut() {
 
 function resetZoom() {
     canvas.setZoom(1);
-    canvas.viewportTransform = [1, 0, 0, 1, 0, 0];
-    canvas.renderAll();
+    // Center the canvas after reset
+    setTimeout(() => {
+        centerAdminCanvas();
+        showToast('View reset to center', 'info');
+    }, 50);
 }
 
 // Clear canvas

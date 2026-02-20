@@ -104,20 +104,36 @@ function initializeCanvas() {
             vpt[4] += evt.clientX - lastPosX;
             vpt[5] += evt.clientY - lastPosY;
             
-            // Apply pan constraints to prevent panning too far
+            // Apply pan constraints to prevent showing too much white space
             const zoom = canvas.getZoom();
             const canvasWidth = canvas.getWidth();
             const canvasHeight = canvas.getHeight();
+            const wrapper = document.querySelector('.viewer-canvas-wrapper');
+            const containerWidth = wrapper ? wrapper.clientWidth : window.innerWidth;
+            const containerHeight = wrapper ? wrapper.clientHeight : window.innerHeight;
             
-            // Calculate max pan limits (allow some overscroll)
-            const maxPanX = canvasWidth * 0.5;
-            const maxPanY = canvasHeight * 0.5;
-            const minPanX = -canvasWidth * zoom + canvasWidth * 0.5;
-            const minPanY = -canvasHeight * zoom + canvasHeight * 0.5;
+            // Allow small overscroll (100px) but keep content mostly visible
+            const padding = 100;
+            const scaledWidth = canvasWidth * zoom;
+            const scaledHeight = canvasHeight * zoom;
             
-            // Constrain panning
-            vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
-            vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+            // If canvas smaller than container, keep centered
+            if (scaledWidth <= containerWidth) {
+                vpt[4] = (containerWidth - canvasWidth) / 2;
+            } else {
+                // Allow limited overscroll
+                const maxPanX = padding;
+                const minPanX = containerWidth - scaledWidth - padding;
+                vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
+            }
+            
+            if (scaledHeight <= containerHeight) {
+                vpt[5] = (containerHeight - canvasHeight) / 2;
+            } else {
+                const maxPanY = padding;
+                const minPanY = containerHeight - scaledHeight - padding;
+                vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+            }
             
             canvas.requestRenderAll();
             lastPosX = evt.clientX;
@@ -279,24 +295,25 @@ function initializeCanvas() {
                 const scaledWidth = canvasWidth * zoom;
                 const scaledHeight = canvasHeight * zoom;
                 
+                // Apply same constraints as mouse panning
+                const padding = 100;
+                
                 // If canvas is smaller than container, keep it centered (no panning needed)
                 if (scaledWidth <= containerWidth) {
-                    const centerX = (containerWidth - scaledWidth) / 2;
-                    vpt[4] = centerX;
+                    vpt[4] = (containerWidth - canvasWidth) / 2;
                 } else {
-                    // If canvas is larger, allow panning but keep some content visible
-                    const maxPanX = 100; // Small right overscroll
-                    const minPanX = containerWidth - scaledWidth - 100; // Small left overscroll
+                    // If canvas is larger, allow limited overscroll
+                    const maxPanX = padding;
+                    const minPanX = containerWidth - scaledWidth - padding;
                     vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
                 }
                 
                 if (scaledHeight <= containerHeight) {
-                    const centerY = (containerHeight - scaledHeight) / 2;
-                    vpt[5] = centerY;
+                    vpt[5] = (containerHeight - canvasHeight) / 2;
                 } else {
-                    // If canvas is larger, allow panning but keep some content visible
-                    const maxPanY = 100; // Small top overscroll
-                    const minPanY = containerHeight - scaledHeight - 100; // Small bottom overscroll
+                    // If canvas is larger, allow limited overscroll
+                    const maxPanY = padding;
+                    const minPanY = containerHeight - scaledHeight - padding;
                     vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
                 }
                 
@@ -1016,13 +1033,17 @@ function zoomOut() {
 }
 
 function resetView() {
-    // Reset viewport transform
-    canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+    // Reset zoom to 1
+    canvas.setZoom(1);
     
-    // Reset to fit container
-    resizeCanvas();
+    // Fit canvas to content
+    fitCanvasToContent();
     
-    showToast('View reset', 'info');
+    // Center the canvas
+    setTimeout(() => {
+        centerCanvas();
+        showToast('View reset to center', 'info');
+    }, 100);
 }
 
 // Error display
