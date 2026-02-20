@@ -38,6 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFloorTabs();
     loadDraftFromLocalStorage();
     startAutoSave();
+    
+    // Re-center canvas on window resize
+    window.addEventListener('resize', () => {
+        setTimeout(() => centerAdminCanvas(), 50);
+    });
 });
 
 // Initialize Fabric.js canvas
@@ -518,7 +523,11 @@ function loadFloorToCanvas(floor) {
     canvas.backgroundColor = '#FFFFFF';
 
     const floorData = buildingData.floors[floor];
-    if (!floorData || !floorData.objects) return;
+    if (!floorData || !floorData.objects) {
+        // Center empty canvas
+        setTimeout(() => centerAdminCanvas(), 50);
+        return;
+    }
 
     floorData.objects.forEach(objData => {
         let obj;
@@ -583,6 +592,31 @@ function loadFloorToCanvas(floor) {
     });
 
     canvas.renderAll();
+    
+    // Center canvas after loading objects
+    setTimeout(() => centerAdminCanvas(), 50);
+}
+
+// Center canvas in viewport for admin view
+function centerAdminCanvas() {
+    const canvasElem = document.getElementById('floorPlanCanvas');
+    const canvasContainer = canvasElem?.parentElement;
+    
+    if (!canvasContainer) return;
+    
+    const canvasWidth = canvas.getWidth();
+    const canvasHeight = canvas.getHeight();
+    const containerWidth = canvasContainer.clientWidth;
+    const containerHeight = canvasContainer.clientHeight;
+    
+    // Calculate centering offset
+    const offsetX = (containerWidth - canvasWidth) / 2;
+    const offsetY = (containerHeight - canvasHeight) / 2;
+    
+    // Apply viewport transform to center the canvas
+    const vpt = [1, 0, 0, 1, Math.max(0, offsetX), Math.max(0, offsetY)];
+    canvas.setViewportTransform(vpt);
+    canvas.requestRenderAll();
 }
 
 // Handle object selection

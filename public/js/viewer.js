@@ -379,26 +379,32 @@ function fitCanvasToContent() {
 
     resizeCanvas();
     
-    // Center the canvas content in the viewport (especially important on mobile)
-    setTimeout(() => {
-        const zoom = canvas.getZoom();
-        const canvasWidth = canvas.getWidth();
-        const canvasHeight = canvas.getHeight();
-        const containerWidth = document.querySelector('.viewer-canvas-wrapper').clientWidth;
-        const containerHeight = document.querySelector('.viewer-canvas-wrapper').clientHeight;
-        
-        // Calculate centering offset
-        const offsetX = (containerWidth - (canvasWidth * zoom)) / 2;
-        const offsetY = (containerHeight - (canvasHeight * zoom)) / 2;
-        
-        // Apply centering only if canvas is smaller than container
-        if (offsetX > 0 || offsetY > 0) {
-            const vpt = canvas.viewportTransform;
-            vpt[4] = Math.max(0, offsetX);
-            vpt[5] = Math.max(0, offsetY);
-            canvas.renderAll();
-        }
-    }, 100);
+    // Center the canvas in the viewport
+    centerCanvas();
+}
+
+// Center canvas in viewport
+function centerCanvas() {
+    const zoom = canvas.getZoom();
+    const canvasWidth = canvas.getWidth();
+    const canvasHeight = canvas.getHeight();
+    const wrapper = document.querySelector('.viewer-canvas-wrapper');
+    
+    if (!wrapper) return;
+    
+    const containerWidth = wrapper.clientWidth;
+    const containerHeight = wrapper.clientHeight;
+    
+    // Calculate how much space is left after placing the canvas
+    const offsetX = (containerWidth - canvasWidth) / 2;
+    const offsetY = (containerHeight - canvasHeight) / 2;
+    
+    // Center the canvas by adjusting viewport transform
+    const vpt = canvas.viewportTransform;
+    vpt[4] = offsetX;
+    vpt[5] = offsetY;
+    
+    canvas.requestRenderAll();
 }
 
 // Resize canvas to fit container while maintaining content aspect ratio
@@ -442,6 +448,9 @@ function resizeCanvas() {
     canvas.setHeight(baseHeight * scale);
     canvas.setZoom(scale);
     canvas.renderAll();
+    
+    // Re-center canvas after resize
+    centerCanvas();
 }
 
 // Initialize controls
@@ -727,13 +736,21 @@ function loadFloorToCanvas(floor) {
     if (totalSvgObjects === 0) {
         canvas.renderAll();
         // Fit canvas to content after loading
-        setTimeout(() => fitCanvasToContent(), 50);
+        setTimeout(() => {
+            fitCanvasToContent();
+            // Center after fitting
+            setTimeout(() => centerCanvas(), 50);
+        }, 50);
     } else {
         // Wait for SVG loading to complete, then fit
         const checkSvgLoaded = setInterval(() => {
             if (svgLoadCount === totalSvgObjects) {
                 clearInterval(checkSvgLoaded);
-                setTimeout(() => fitCanvasToContent(), 50);
+                setTimeout(() => {
+                    fitCanvasToContent();
+                    // Center after fitting
+                    setTimeout(() => centerCanvas(), 50);
+                }, 50);
             }
         }, 100);
     }
