@@ -45,7 +45,91 @@ function initializeCanvas() {
     canvas = new fabric.Canvas('floorPlanCanvas', {
         backgroundColor: '#FFFFFF',
         selection: true,
-        preserveObjectStacking: true
+        preserveObjectStacking: true,
+        defaultCursor: 'default',
+        hoverCursor: 'move'
+    });
+
+    // Enable panning with mouse drag on empty space (Google Maps style - Admin mode)
+    let isPanning = false;
+    let lastPosX, lastPosY;
+
+    canvas.on('mouse:down', function(opt) {
+        const evt = opt.e;
+        
+        // Enable panning if:
+        // 1. Clicking on empty space (no target) OR
+        // 2. Holding Space key (temporary pan mode)
+        if (!opt.target || evt.code === 'Space' || canvas.spaceKeyDown) {
+            isPanning = true;
+            canvas.selection = false;
+            lastPosX = evt.clientX;
+            lastPosY = evt.clientY;
+            canvas.defaultCursor = 'grabbing';
+            canvas.renderAll();
+        }
+    });
+
+    canvas.on('mouse:move', function(opt) {
+        if (isPanning) {
+            const evt = opt.e;
+            const vpt = canvas.viewportTransform;
+            vpt[4] += evt.clientX - lastPosX;
+            vpt[5] += evt.clientY - lastPosY;
+            
+            // Apply pan constraints
+            const zoom = canvas.getZoom();
+            const canvasWidth = canvas.getWidth();
+            const canvasHeight = canvas.getHeight();
+            
+            const maxPanX = canvasWidth * 0.5;
+            const maxPanY = canvasHeight * 0.5;
+            const minPanX = -canvasWidth * zoom + canvasWidth * 0.5;
+            const minPanY = -canvasHeight * zoom + canvasHeight * 0.5;
+            
+            vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
+            vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+            
+            canvas.requestRenderAll();
+            lastPosX = evt.clientX;
+            lastPosY = evt.clientY;
+        }
+    });
+
+    canvas.on('mouse:up', function(opt) {
+        if (isPanning) {
+            canvas.setViewportTransform(canvas.viewportTransform);
+            isPanning = false;
+            canvas.selection = true;
+            canvas.defaultCursor = 'default';
+            canvas.renderAll();
+        }
+    });
+
+    canvas.on('mouse:out', function(opt) {
+        if (isPanning) {
+            isPanning = false;
+            canvas.selection = true;
+            canvas.defaultCursor = 'default';
+            canvas.renderAll();
+        }
+    });
+
+    // Space key for temporary pan mode
+    document.addEventListener('keydown', function(e) {
+        if (e.code === 'Space' && !e.repeat) {
+            canvas.spaceKeyDown = true;
+            canvas.defaultCursor = 'grab';
+            canvas.renderAll();
+        }
+    });
+
+    document.addEventListener('keyup', function(e) {
+        if (e.code === 'Space') {
+            canvas.spaceKeyDown = false;
+            canvas.defaultCursor = 'default';
+            canvas.renderAll();
+        }
     });
 
     // Mouse wheel: Ctrl = Zoom, Shift = Horizontal scroll, Default = Vertical/Horizontal scroll
@@ -503,8 +587,46 @@ function loadFloorToCanvas(floor) {
 
 // Handle object selection
 function handleObjectSelection(e) {
-    selectedObject = e.selected[0];
-    showPropertiesPanel(selectedObject);
+    const activeObject = canvas.getActiveObject();
+    
+    if (!activeObject) {
+        clearPropertiesPanel();
+        return;
+    }
+    
+    // Check if multiple objects are selected
+    if (activeObject.type === 'activeSelection') {
+        const count = activeObject.getObjects().length;
+        showMultiSelectionPanel(count);
+    } else {
+        selectedObject = activeObject;
+        showPropertiesPanel(selectedObject);
+    }
+}
+
+// Show properties panel for multiple selected objects
+function showMultiSelectionPanel(count) {
+    const panel = document.getElementById('propertiesPanel');
+    
+    panel.innerHTML = `
+    <div class="properties-multi-select">
+      <div style="text-align: center; padding: var(--spacing-md); background: var(--gray-100); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 48px; height: 48px; color: var(--primary-blue); margin-bottom: var(--spacing-sm);">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+        </svg>
+        <h3 style="margin: 0; color: var(--gray-900);">${count} Objects Selected</h3>
+        <p style="color: var(--gray-600); font-size: 0.9rem; margin: var(--spacing-xs) 0 0 0;">Use Delete key or button below to remove</p>
+      </div>
+      
+      <div class="property-group">
+        <button class="btn btn-danger" style="width: 100%;" onclick="deleteSelected()">🗑️ Delete All ${count} Objects</button>
+      </div>
+      
+      <div class="property-group">
+        <button class="btn btn-secondary" style="width: 100%;" onclick="canvas.discardActiveObject(); canvas.renderAll(); clearPropertiesPanel();">Deselect All</button>
+      </div>
+    </div>
+  `;
 }
 
 // Show properties panel for selected object
@@ -664,13 +786,28 @@ function sendToBack() {
 }
 
 function deleteSelected() {
-    if (selectedObject) {
-        canvas.remove(selectedObject);
-        canvas.renderAll();
-        clearPropertiesPanel();
-        saveCurrentFloorToData();
-        triggerAutoSave();
+    // Handle both single and multiple selections
+    const activeObject = canvas.getActiveObject();
+    
+    if (!activeObject) return;
+    
+    // Save state for undo
+    saveState();
+    
+    if (activeObject.type === 'activeSelection') {
+        // Multiple objects selected
+        const objects = activeObject.getObjects();
+        canvas.discardActiveObject();
+        objects.forEach(obj => canvas.remove(obj));
+    } else {
+        // Single object selected
+        canvas.remove(activeObject);
     }
+    
+    canvas.renderAll();
+    clearPropertiesPanel();
+    saveCurrentFloorToData();
+    triggerAutoSave();
 }
 
 // Zoom controls
@@ -1146,19 +1283,14 @@ function initializeKeyboardShortcuts() {
             e.preventDefault();
             fitToScreen();
         }
-        // Delete - Remove selected object
+        // Delete - Remove selected object(s)
         else if (e.key === 'Delete') {
             e.preventDefault();
             const activeObj = canvas.getActiveObject();
             if (activeObj) {
-                // Save state BEFORE deletion for undo
-                saveState();
-                canvas.remove(activeObj);
-                canvas.renderAll();
-                clearPropertiesPanel();
-                saveCurrentFloorToData();
-                triggerAutoSave();
-                showToast('Object deleted', 'success');
+                deleteSelected();
+                const count = activeObj.type === 'activeSelection' ? activeObj.getObjects().length : 1;
+                showToast(`Deleted ${count} object${count > 1 ? 's' : ''}`, 'success');
             }
         }
         // Escape - Deselect and close help
