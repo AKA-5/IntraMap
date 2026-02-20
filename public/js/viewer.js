@@ -22,20 +22,41 @@ function initializeCanvas() {
         selection: false,
         interactive: true,
         enableRetinaScaling: true,
-        allowTouchScrolling: false, // Disable to allow scroll container to handle
-        stopContextMenu: false,
+        allowTouchScrolling: true, // Enable touch scrolling for panning
+        stopContextMenu: true,
         renderOnAddRemove: true,
-        hoverCursor: 'default',
-        moveCursor: 'default',
+        hoverCursor: 'grab',
+        moveCursor: 'grab',
+        defaultCursor: 'grab',
         perPixelTargetFind: true,  // Precise click detection on actual shape, not bounding box
         targetFindTolerance: 4      // Small tolerance for easier clicking on thin borders
     });
 
-    // Handle object clicks
+    // Handle object clicks - only trigger if minimal movement (true click, not drag)
+    let clickStartPos = null;
+    let clickStartTarget = null;
+
     canvas.on('mouse:down', (e) => {
-        if (e.target && e.target.objectLabel) {
-            showObjectDetails(e.target);
+        // Track click start position and target
+        clickStartPos = { x: e.e.clientX, y: e.e.clientY };
+        clickStartTarget = e.target;
+    });
+
+    canvas.on('mouse:up', (e) => {
+        // Only show details if it's a true click (minimal movement)
+        if (e.target && e.target.objectLabel && clickStartTarget === e.target && clickStartPos) {
+            const distance = Math.sqrt(
+                Math.pow(e.e.clientX - clickStartPos.x, 2) +
+                Math.pow(e.e.clientY - clickStartPos.y, 2)
+            );
+            
+            // If movement is less than 5 pixels, treat as click
+            if (distance < 5) {
+                showObjectDetails(e.target);
+            }
         }
+        clickStartPos = null;
+        clickStartTarget = null;
     });
 
     // Update cursor on mouse move
@@ -43,25 +64,27 @@ function initializeCanvas() {
         if (e.target && e.target.objectLabel) {
             canvas.defaultCursor = 'pointer';
         } else {
-            canvas.defaultCursor = 'default';
+            canvas.defaultCursor = 'grab';
         }
     });
 
-    // Enable panning with mouse drag (when zoomed)
+    // Enable panning with mouse drag on empty space (Google Maps style)
     let isPanning = false;
     let lastPosX, lastPosY;
+    let dragStartTarget = null;
 
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
-        if (evt.altKey === true || evt.ctrlKey === true || canvas.getZoom() > 1) {
-            // Enable panning mode
-            if (!opt.target || evt.altKey || evt.ctrlKey) {
-                isPanning = true;
-                canvas.selection = false;
-                lastPosX = evt.clientX;
-                lastPosY = evt.clientY;
-                canvas.defaultCursor = 'grabbing';
-            }
+        dragStartTarget = opt.target;
+        
+        // Enable panning if clicking on empty space (no target)
+        if (!opt.target) {
+            isPanning = true;
+            canvas.selection = false;
+            lastPosX = evt.clientX;
+            lastPosY = evt.clientY;
+            canvas.defaultCursor = 'grabbing';
+            canvas.renderAll();
         }
     });
 
@@ -71,6 +94,22 @@ function initializeCanvas() {
             const vpt = canvas.viewportTransform;
             vpt[4] += evt.clientX - lastPosX;
             vpt[5] += evt.clientY - lastPosY;
+            
+            // Apply pan constraints to prevent panning too far
+            const zoom = canvas.getZoom();
+            const canvasWidth = canvas.getWidth();
+            const canvasHeight = canvas.getHeight();
+            
+            // Calculate max pan limits (allow some overscroll)
+            const maxPanX = canvasWidth * 0.5;
+            const maxPanY = canvasHeight * 0.5;
+            const minPanX = -canvasWidth * zoom + canvasWidth * 0.5;
+            const minPanY = -canvasHeight * zoom + canvasHeight * 0.5;
+            
+            // Constrain panning
+            vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
+            vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+            
             canvas.requestRenderAll();
             lastPosX = evt.clientX;
             lastPosY = evt.clientY;
@@ -81,7 +120,20 @@ function initializeCanvas() {
         if (isPanning) {
             canvas.setViewportTransform(canvas.viewportTransform);
             isPanning = false;
-            canvas.defaultCursor = 'default';
+            canvas.selection = false;
+            canvas.defaultCursor = 'grab';
+            canvas.renderAll();
+        }
+        dragStartTarget = null;
+    });
+
+    // Cancel panning if mouse leaves canvas
+    canvas.on('mouse:out', function(opt) {
+        if (isPanning) {
+            isPanning = false;
+            canvas.selection = false;
+            canvas.defaultCursor = 'grab';
+            canvas.renderAll();
         }
     });
 
@@ -167,8 +219,8 @@ function initializeCanvas() {
     });
     
     canvas.on('touch:drag', function(e) {
-        // Enable panning with single finger drag when zoomed
-        if (canvas.getZoom() > 1 && e.e.touches && e.e.touches.length === 1) {
+        // Enable panning with single finger drag on empty space (like Google Maps)
+        if (e.e.touches && e.e.touches.length === 1) {
             const vpt = canvas.viewportTransform;
             vpt[4] += e.self.x - e.self.lastX;
             vpt[5] += e.self.y - e.self.lastY;

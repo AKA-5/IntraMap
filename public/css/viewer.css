@@ -204,20 +204,22 @@ body {
 .viewer-canvas-container {
     flex: 1;
     position: relative;
-    overflow: auto;  /* Enable scrolling */
+    overflow: hidden;  /* Hide overflow, let Fabric handle panning */
     background: white;  /* White background for scroll area */
     -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
+    touch-action: none;  /* Let canvas handle all touch events */
 }
 
 .viewer-canvas-wrapper {
     width: 100%;
-    min-height: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: grab;
-    padding: 60px;  /* Padding around canvas for scrolling space */
+    padding: 60px;  /* Padding around canvas for visual space */
     box-sizing: border-box;
+    position: relative;
 }
 
 .viewer-canvas-wrapper:active {
@@ -232,7 +234,8 @@ body {
     background: white;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
-    transition: transform 0.1s ease-out;
+    cursor: grab;  /* Show grab cursor on canvas */
+}
 }
 
 /* Controls */
@@ -721,22 +724,24 @@ body {
     .viewer-canvas-container {
         flex: 1;  /* Take remaining space */
         position: relative;
-        overflow: auto !important;  /* Enable scrolling */
+        overflow: hidden;  /* Let Fabric handle panning */
         -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
         background: white;  /* White background to match wrapper */
         overscroll-behavior: contain;  /* Prevent pull-to-refresh */
+        touch-action: none;  /* Let canvas handle all touch */
     }
     
-    /* Canvas wrapper - scrollable with proper padding */
+    /* Canvas wrapper - touch-friendly padding */
     .viewer-canvas-wrapper {
-        cursor: default;  /* No grab cursor on mobile */
+        cursor: grab;  /* Show grab cursor on mobile too */
         width: 100%;  /* Fill container width */
-        min-height: 100%;  /* At least full height */
+        height: 100%;  /* Full height */
         display: flex;
         align-items: center;  /* Center vertically */
         justify-content: center;  /* Center horizontally */
-        padding: 40px 20px;  /* Padding for scrolling room */
+        padding: 40px 20px;  /* Padding for visual space */
         box-sizing: border-box;
+        position: relative;
     }
     
     #viewerCanvas {
@@ -745,6 +750,7 @@ body {
         pointer-events: auto;  /* Allow clicks on canvas */
         max-width: calc(100vw - 40px);  /* Leave room for padding */
         height: auto;  /* Maintain aspect ratio */
+        cursor: grab;  /* Grab cursor on canvas */
     }
 
     /* Controls - Compact, Fixed at Bottom */
