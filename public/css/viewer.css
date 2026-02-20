@@ -204,21 +204,20 @@ body {
 .viewer-canvas-container {
     flex: 1;
     position: relative;
-    overflow: hidden;  /* Desktop: hidden */
-    background: var(--gray-100);
+    overflow: auto;  /* Enable scrolling */
+    background: white;  /* White background for scroll area */
+    -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
 }
 
 .viewer-canvas-wrapper {
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: grab;
-    background: white;  /* White background */
-    padding: 40px;  /* Padding around canvas */
+    padding: 60px;  /* Padding around canvas for scrolling space */
     box-sizing: border-box;
-    overflow: auto;  /* Allow scrolling if needed */
 }
 
 .viewer-canvas-wrapper:active {
@@ -454,8 +453,8 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     padding: var(--spacing-lg);
-    min-width: 280px;
-    max-width: 400px;
+    min-width: 320px;
+    max-width: min(500px, 90vw);  /* Responsive to screen width */
     max-height: 80vh;
     /* Limit height to 80% of viewport */
     overflow-y: auto;
@@ -726,28 +725,25 @@ body {
         -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
         background: white;  /* White background to match wrapper */
         overscroll-behavior: contain;  /* Prevent pull-to-refresh */
-        touch-action: pan-x pan-y;  /* Allow finger scrolling */
     }
     
     /* Canvas wrapper - scrollable with proper padding */
     .viewer-canvas-wrapper {
         cursor: default;  /* No grab cursor on mobile */
         width: 100%;  /* Fill container width */
-        height: 100%;  /* Fill container height */
+        min-height: 100%;  /* At least full height */
         display: flex;
         align-items: center;  /* Center vertically */
         justify-content: center;  /* Center horizontally */
-        padding: 30px 15px;  /* Moderate padding for scrolling room */
+        padding: 40px 20px;  /* Padding for scrolling room */
         box-sizing: border-box;
-        background: white;  /* White background for the scrollable area */
     }
     
     #viewerCanvas {
         display: block;
-        touch-action: none;  /* Prevent canvas from handling touch, let wrapper handle it */
         margin: 0 auto;  /* Center canvas */
         pointer-events: auto;  /* Allow clicks on canvas */
-        max-width: 100%;  /* Don't exceed screen width */
+        max-width: calc(100vw - 40px);  /* Leave room for padding */
         height: auto;  /* Maintain aspect ratio */
     }
 
@@ -807,16 +803,16 @@ body {
 
     /* Object Popup - Bottom Sheet Style, More Compact */
     .object-popup {
-        left: 0 !important;
-        right: 0 !important;
+        left: var(--spacing-xs) !important;
+        right: var(--spacing-xs) !important;
         bottom: 0 !important;
         top: auto !important;
         min-width: auto;
         max-width: none;
         border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        max-height: 50vh;
+        max-height: 60vh;  /* More space for content */
         overflow-y: auto;
-        padding: var(--spacing-md);
+        padding: var(--spacing-md) var(--spacing-lg);
     }
     
     .object-popup h3 {

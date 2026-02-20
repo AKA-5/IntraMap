@@ -268,22 +268,25 @@ function resizeCanvas() {
     // Calculate scale to fit container
     let scale;
     if (isMobile) {
-        // On mobile: fit to width with small margin for better visibility
-        // Padding: 30px top/bottom, 15px left/right
+        // On mobile: fit to width with margin for better visibility
+        // Padding: 40px top/bottom, 20px left/right
         scale = Math.min(
-            (containerWidth - 30) / baseWidth,  // Account for wrapper padding (15px left + 15px right = 30)
-            (containerHeight - 60) / baseHeight  // Account for wrapper padding (30px top + 30px bottom = 60)
+            (containerWidth - 40) / baseWidth,  // Account for wrapper padding (20px left + 20px right = 40)
+            (containerHeight - 80) / baseHeight  // Account for wrapper padding (40px top + 40px bottom = 80)
         );
         // Ensure reasonable minimum scale on mobile for readability
-        scale = Math.max(scale, 0.6);
+        scale = Math.max(scale, 0.5);
         // But also allow larger scale for better screen utilization
-        scale = Math.min(scale, 1.5);
+        scale = Math.min(scale, 2.0);  // Allow up to 2x zoom
     } else {
-        // On desktop: fit with 95% of available space
+        // On desktop: fit with space for padding (60px all sides = 120px total)
         scale = Math.min(
-            containerWidth / baseWidth,
-            containerHeight / baseHeight
-        ) * 0.95;
+            (containerWidth - 120) / baseWidth,
+            (containerHeight - 120) / baseHeight
+        );
+        // Keep it reasonable
+        scale = Math.max(scale, 0.3);
+        scale = Math.min(scale, 1.5);
     }
 
     canvas.setWidth(baseWidth * scale);
