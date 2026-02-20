@@ -215,6 +215,10 @@ body {
     align-items: center;
     justify-content: center;
     cursor: grab;
+    background: white;  /* White background */
+    padding: 40px;  /* Padding around canvas */
+    box-sizing: border-box;
+    overflow: auto;  /* Allow scrolling if needed */
 }
 
 .viewer-canvas-wrapper:active {
@@ -720,7 +724,7 @@ body {
         position: relative;
         overflow: auto !important;  /* Enable scrolling */
         -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
-        background: var(--gray-100);
+        background: white;  /* White background to match wrapper */
         overscroll-behavior: contain;  /* Prevent pull-to-refresh */
         touch-action: pan-x pan-y;  /* Allow finger scrolling */
     }
@@ -728,14 +732,14 @@ body {
     /* Canvas wrapper - scrollable with proper padding */
     .viewer-canvas-wrapper {
         cursor: default;  /* No grab cursor on mobile */
-        width: fit-content;  /* Fit to canvas size */
-        min-width: 100%;  /* At least full width */
-        min-height: 100%;  /* At least full height */
+        width: 100%;  /* Fill container width */
+        height: 100%;  /* Fill container height */
         display: flex;
-        align-items: flex-start;  /* Top align on mobile */
-        justify-content: center;
-        padding: 20px;  /* Padding for scrolling */
+        align-items: center;  /* Center vertically */
+        justify-content: center;  /* Center horizontally */
+        padding: 30px 15px;  /* Moderate padding for scrolling room */
         box-sizing: border-box;
+        background: white;  /* White background for the scrollable area */
     }
     
     #viewerCanvas {
@@ -743,6 +747,8 @@ body {
         touch-action: none;  /* Prevent canvas from handling touch, let wrapper handle it */
         margin: 0 auto;  /* Center canvas */
         pointer-events: auto;  /* Allow clicks on canvas */
+        max-width: 100%;  /* Don't exceed screen width */
+        height: auto;  /* Maintain aspect ratio */
     }
 
     /* Controls - Compact, Fixed at Bottom */

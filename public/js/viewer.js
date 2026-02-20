@@ -269,12 +269,15 @@ function resizeCanvas() {
     let scale;
     if (isMobile) {
         // On mobile: fit to width with small margin for better visibility
+        // Padding: 30px top/bottom, 15px left/right
         scale = Math.min(
-            (containerWidth - 32) / baseWidth,  // 32px total horizontal margin
-            (containerHeight - 32) / baseHeight  // 32px total vertical margin
+            (containerWidth - 30) / baseWidth,  // Account for wrapper padding (15px left + 15px right = 30)
+            (containerHeight - 60) / baseHeight  // Account for wrapper padding (30px top + 30px bottom = 60)
         );
-        // Ensure minimum scale on mobile for readability
-        scale = Math.max(scale, 0.5);
+        // Ensure reasonable minimum scale on mobile for readability
+        scale = Math.max(scale, 0.6);
+        // But also allow larger scale for better screen utilization
+        scale = Math.min(scale, 1.5);
     } else {
         // On desktop: fit with 95% of available space
         scale = Math.min(
