@@ -32,6 +32,12 @@ function initializeCanvas() {
         targetFindTolerance: 4      // Small tolerance for easier clicking on thin borders
     });
 
+    // Panning state variables (both mouse and touch)
+    let isPanning = false;
+    let lastPosX, lastPosY;
+    let dragStartTarget = null;
+    let isTouchPanning = false;
+
     // Handle object clicks - only trigger if minimal movement (true click, not drag)
     let clickStartPos = null;
     let clickStartTarget = null;
@@ -43,6 +49,13 @@ function initializeCanvas() {
     });
 
     canvas.on('mouse:up', (e) => {
+        // Don't show popup if user was panning (touch or mouse)
+        if (isTouchPanning || isPanning) {
+            clickStartPos = null;
+            clickStartTarget = null;
+            return;
+        }
+        
         // Only show details if it's a true click (minimal movement)
         if (e.target && e.target.objectLabel && clickStartTarget === e.target && clickStartPos) {
             const distance = Math.sqrt(
@@ -69,10 +82,6 @@ function initializeCanvas() {
     });
 
     // Enable panning with mouse drag on empty space (Google Maps style)
-    let isPanning = false;
-    let lastPosX, lastPosY;
-    let dragStartTarget = null;
-
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
         dragStartTarget = opt.target;
@@ -178,6 +187,20 @@ function initializeCanvas() {
     let touchStartDistance = 0;
     let touchStartZoom = 1;
     let touchStartCenter = null;
+    let touchStartPos = null;
+    let touchMoveDistance = 0;
+    
+    // Track touch start
+    canvas.upperCanvasEl.addEventListener('touchstart', function(e) {
+        if (e.touches && e.touches.length === 1) {
+            touchStartPos = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY
+            };
+            isTouchPanning = false;
+            touchMoveDistance = 0;
+        }
+    }, { passive: true });
     
     canvas.on('touch:gesture', function(e) {
         if (e.e.touches && e.e.touches.length === 2) {
@@ -221,10 +244,67 @@ function initializeCanvas() {
     canvas.on('touch:drag', function(e) {
         // Enable panning with single finger drag on empty space (like Google Maps)
         if (e.e.touches && e.e.touches.length === 1) {
-            const vpt = canvas.viewportTransform;
-            vpt[4] += e.self.x - e.self.lastX;
-            vpt[5] += e.self.y - e.self.lastY;
-            canvas.requestRenderAll();
+            // Calculate distance moved from start
+            if (touchStartPos) {
+                const currentX = e.e.touches[0].clientX;
+                const currentY = e.e.touches[0].clientY;
+                touchMoveDistance = Math.sqrt(
+                    Math.pow(currentX - touchStartPos.x, 2) +
+                    Math.pow(currentY - touchStartPos.y, 2)
+                );
+                
+                // Only start panning if moved more than 10 pixels (prevents accidental panning during taps)
+                if (touchMoveDistance > 10) {
+                    isTouchPanning = true;
+                }
+            }
+            
+            // Only apply pan if we've determined this is a pan gesture, not a tap
+            if (isTouchPanning) {
+                const vpt = canvas.viewportTransform;
+                const deltaX = e.self.x - e.self.lastX;
+                const deltaY = e.self.y - e.self.lastY;
+                
+                vpt[4] += deltaX;
+                vpt[5] += deltaY;
+                
+                // Apply constraints to keep canvas centered and prevent it from sliding away
+                const zoom = canvas.getZoom();
+                const canvasWidth = canvas.getWidth();
+                const canvasHeight = canvas.getHeight();
+                const containerWidth = document.querySelector('.viewer-canvas-wrapper').clientWidth;
+                const containerHeight = document.querySelector('.viewer-canvas-wrapper').clientHeight;
+                
+                // Calculate scaled canvas dimensions
+                const scaledWidth = canvasWidth * zoom;
+                const scaledHeight = canvasHeight * zoom;
+                
+                // If canvas is smaller than container, keep it centered (no panning needed)
+                if (scaledWidth <= containerWidth) {
+                    const centerX = (containerWidth - scaledWidth) / 2;
+                    vpt[4] = centerX;
+                } else {
+                    // If canvas is larger, allow panning but keep some content visible
+                    const maxPanX = 100; // Small right overscroll
+                    const minPanX = containerWidth - scaledWidth - 100; // Small left overscroll
+                    vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
+                }
+                
+                if (scaledHeight <= containerHeight) {
+                    const centerY = (containerHeight - scaledHeight) / 2;
+                    vpt[5] = centerY;
+                } else {
+                    // If canvas is larger, allow panning but keep some content visible
+                    const maxPanY = 100; // Small top overscroll
+                    const minPanY = containerHeight - scaledHeight - 100; // Small bottom overscroll
+                    vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+                }
+                
+                canvas.requestRenderAll();
+                
+                // Prevent default touch behavior if we're panning
+                e.e.preventDefault();
+            }
         }
     });
     
@@ -233,6 +313,9 @@ function initializeCanvas() {
         touchStartDistance = 0;
         touchStartZoom = 1;
         touchStartCenter = null;
+        touchStartPos = null;
+        isTouchPanning = false;
+        touchMoveDistance = 0;
     });
 
     // Responsive canvas sizing
@@ -296,12 +379,26 @@ function fitCanvasToContent() {
 
     resizeCanvas();
     
-    // Reset container scroll position to top-left (especially important on mobile)
-    const container = document.querySelector('.viewer-canvas-container');
-    if (container) {
-        container.scrollTop = 0;
-        container.scrollLeft = 0;
-    }
+    // Center the canvas content in the viewport (especially important on mobile)
+    setTimeout(() => {
+        const zoom = canvas.getZoom();
+        const canvasWidth = canvas.getWidth();
+        const canvasHeight = canvas.getHeight();
+        const containerWidth = document.querySelector('.viewer-canvas-wrapper').clientWidth;
+        const containerHeight = document.querySelector('.viewer-canvas-wrapper').clientHeight;
+        
+        // Calculate centering offset
+        const offsetX = (containerWidth - (canvasWidth * zoom)) / 2;
+        const offsetY = (containerHeight - (canvasHeight * zoom)) / 2;
+        
+        // Apply centering only if canvas is smaller than container
+        if (offsetX > 0 || offsetY > 0) {
+            const vpt = canvas.viewportTransform;
+            vpt[4] = Math.max(0, offsetX);
+            vpt[5] = Math.max(0, offsetY);
+            canvas.renderAll();
+        }
+    }, 100);
 }
 
 // Resize canvas to fit container while maintaining content aspect ratio
