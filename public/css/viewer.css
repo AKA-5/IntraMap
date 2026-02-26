@@ -1,14 +1,20 @@
 /* Viewer Specific Styles */
 body {
     margin: 0;
-    overflow: hidden;  /* Desktop: no scrolling */
+    overflow: hidden;  /* No body scrolling on any device */
     background: var(--gray-900);
+    position: fixed;  /* Lock body position */
+    width: 100%;
+    height: 100%;
 }
 
 .viewer-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;  /* Desktop: fixed height */
+    height: 100vh;  /* Fixed viewport height */
+    height: 100dvh;  /* Dynamic viewport height for mobile browsers */
+    width: 100vw;
+    overflow: hidden;
 }
 
 /* Top Bar */
@@ -204,10 +210,11 @@ body {
 .viewer-canvas-container {
     flex: 1;
     position: relative;
-    overflow: hidden;  /* Hide overflow, let Fabric handle panning */
-    background: white;  /* White background for scroll area */
-    -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
+    overflow: hidden;  /* Hide overflow, canvas handles all interactions */
+    background: white;
+    -webkit-overflow-scrolling: touch;
     touch-action: none;  /* Let canvas handle all touch events */
+    overscroll-behavior: contain;  /* Prevent pull-to-refresh */
 }
 
 .viewer-canvas-wrapper {
@@ -217,12 +224,11 @@ body {
     align-items: center;
     justify-content: center;
     cursor: grab;
-    padding: 60px;  /* Padding around canvas for visual space */
+    padding: 40px 20px;  /* Consistent padding for all devices */
     box-sizing: border-box;
     position: relative;
     touch-action: none;  /* Ensure no browser touch gestures interfere */
-    z-index: 1;  /* Below controls */
-    pointer-events: none;  /* Let controls be clickable */
+    z-index: 1;
 }
 
 .viewer-canvas-wrapper:active {
@@ -237,40 +243,43 @@ body {
     background: white;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
-    cursor: grab;  /* Show grab cursor on canvas */
-    pointer-events: auto;  /* Canvas itself should capture events */
-}
+    cursor: grab;
+    pointer-events: auto;  /* Canvas captures all interactions */
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-/* Controls */
+#viewerCanvas:active {
+    cursor: grabbing;
+}
+
 /* Controls - Always visible and prominent on all devices */
 .viewer-controls {
-    position: fixed !important;  /* Force fixed positioning */
+    position: fixed !important;
     bottom: 20px !important;
     right: 20px !important;
-    display: flex !important;  /* Force display */
+    display: flex !important;
     flex-direction: column;
-    gap: 12px;
-    z-index: 99999 !important;  /* Ensure above EVERYTHING */
-    pointer-events: auto !important;  /* Ensure clickable */
-    visibility: visible !important;  /* Force visibility */
+    gap: 10px;
+    z-index: 999 !important;  /* Above everything */
+    pointer-events: auto !important;
 }
 
 .control-group {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-    padding: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 8px;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .control-group .btn-icon {
-    min-width: 48px;
-    min-height: 48px;
+    min-width: 44px;  /* Touch-friendly on all devices */
+    min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -278,17 +287,24 @@ body {
     background: white;
     border: 1px solid #e5e7eb;
     cursor: pointer;
+    border-radius: 8px;
+    color: var(--gray-700);
 }
 
 .control-group .btn-icon:hover {
-    transform: scale(1.08);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     background: #f9fafb;
     border-color: #3B82F6;
+    color: #3B82F6;
+}
+
+.control-group .btn-icon:active {
+    transform: scale(0.95);
 }
 
 .control-group .btn-icon svg {
-    pointer-events: none;  /* Ensure SVG doesn't block clicks */
+    pointer-events: none;
 }
 
 @keyframes pulse {
@@ -651,236 +667,113 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-    /* Fix mobile scrolling - prevent body scroll but allow canvas container scroll */
-    body {
-        overflow: hidden;  /* Prevent body scroll */
-        -webkit-overflow-scrolling: touch;
-        position: fixed;  /* Lock body */
-        width: 100%;
-        height: 100%;
-    }
-    
-    .viewer-container {
-        height: 100vh;  /* Fixed viewport height */
-        height: 100dvh;  /* Dynamic viewport height for mobile browsers */
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        width: 100%;
-        position: relative;
+    /* Compact header for mobile */
+    .viewer-header {
+        flex-shrink: 0;
+        padding: var(--spacing-xs) var(--spacing-sm);
     }
     
     /* Hide version indicator on mobile */
     .version-indicator {
-        display: none;
+        display: none !important;
     }
     
-    /* Header Layout - Stack Elements Properly, Compact */
-    .viewer-header {
-        flex-shrink: 0;  /* Don't shrink */
-        padding: var(--spacing-xs) var(--spacing-sm);
-    }
-    
-    .header-content {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0;
-        min-height: auto;
-    }
-
-    /* Back Button - Top Left with Proper Spacing, Compact */
+    /* Back Button - Compact */
     .back-btn {
-        position: relative;
-        left: 0;
-        top: 0;
-        align-self: flex-start;
-        margin-bottom: var(--spacing-xs);
-        min-height: 40px;  /* Touch target size */
-        font-size: 14px;
-        padding: 8px 12px;
+        position: absolute;
+        left: 15px;
+        top: 15px;
+        padding: 6px 12px;
+        font-size: 13px;
+        min-height: 36px;
     }
 
-    /* Building Title - Reduce Size on Mobile, Compact */
+    /* Building Title - Compact */
     .building-title-main {
         padding: var(--spacing-xs) 0;
     }
 
     .building-title-main h1 {
-        font-size: 1.1rem;
-        margin: 0;
+        font-size: 1.25rem;
     }
 
-    /* Search Bar - Full Width Below Title, Compact */
+    /* Search Bar - Full Width */
     .header-search {
         position: relative;
         top: auto;
         left: auto;
-        right: auto;
         width: 100%;
         padding: var(--spacing-xs) 0;
-        order: 3;  /* Move after floor selector */
     }
 
     .search-bar {
         width: 100%;
-        max-width: 100%;
     }
 
     .search-bar input {
-        min-height: 40px;  /* Touch-friendly */
-        padding: 10px 10px 10px 36px;
+        min-height: 40px;
         font-size: 14px;
     }
 
-    .search-icon {
-        left: 12px;
-        color: var(--gray-500);
-    }
-
-    /* Floor Selector - Full Width, Touch-Friendly, Compact */
+    /* Floor Selector - Full Width */
     .floor-selector-wrapper {
-        margin-bottom: var(--spacing-xs);
-        order: 2;  /* After title, before search */
         width: 100%;
     }
 
     .floor-selector {
         width: 100%;
-        max-width: 100%;
-        min-width: auto;
-        min-height: 40px;  /* Touch target */
-        padding: 10px 14px;
+        min-height: 40px;
         font-size: 14px;
     }
 
-    /* Canvas Container - Properly constrained to available space */
-    .viewer-canvas-container {
-        flex: 1;  /* Take remaining space */
-        position: relative;
-        overflow: hidden;  /* Let Fabric handle panning */
-        -webkit-overflow-scrolling: touch;  /* Smooth iOS scrolling */
-        background: white;  /* White background to match wrapper */
-        overscroll-behavior: contain;  /* Prevent pull-to-refresh */
-        touch-action: none;  /* Let canvas handle all touch */
-    }
-    
-    /* Canvas wrapper - touch-friendly padding */
+    /* Canvas wrapper - optimized padding for mobile */
     .viewer-canvas-wrapper {
-        cursor: grab;  /* Show grab cursor on mobile too */
-        width: 100%;  /* Fill container width */
-        height: 100%;  /* Full height */
-        display: flex;
-        align-items: center;  /* Center vertically */
-        justify-content: center;  /* Center horizontally */
-        padding: 40px 20px;  /* Padding for visual space */
-        box-sizing: border-box;
-        position: relative;
-        touch-action: none;  /* Prevent browser gestures, allow custom touch handling */
-    }
-    
-    #viewerCanvas {
-        display: block;
-        margin: 0 auto;  /* Center canvas */
-        pointer-events: auto;  /* Allow clicks on canvas */
-        max-width: calc(100vw - 40px);  /* Leave room for padding */
-        height: auto;  /* Maintain aspect ratio */
-        cursor: grab;  /* Grab cursor on canvas */
+        padding: 20px 10px;
     }
 
-    /* Controls - Compact, Fixed at Bottom */
-    /* Controls - Mobile optimized, horizontal layout */
+    /* Controls - Bottom right for easier thumb access */
     .viewer-controls {
-        position: fixed;
-        bottom: 10px;
-        right: var(--spacing-xs);
-        left: var(--spacing-xs);
-        flex-direction: row;
+        bottom: 15px !important;
+        right: 15px !important;
         gap: 8px;
-        flex-wrap: nowrap;  /* Single row */
-        z-index: 1000;
     }
 
     .control-group {
-        flex: 1;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        gap: 4px;  /* Tight spacing */
         padding: 8px;
-        min-width: 0;
-        background: rgba(255, 255, 255, 0.98);
-        box-shadow: var(--shadow-xl);
-        border-radius: var(--radius-lg);
+        gap: 6px;
     }
     
-    /* Zoom controls - extra compact */
     .control-group .btn-icon {
-        min-width: 36px;  /* Smaller */
-        min-height: 36px;
-        padding: 6px;
-        font-size: 14px;
-        border-radius: var(--radius-md);
+        min-width: 42px;
+        min-height: 42px;
     }
 
-    /* Buttons - Compact Touch Targets */
-    .control-btn,
-    .help-btn {
-        min-height: 36px;
-        min-width: 36px;
-        padding: 8px;
-        font-size: 14px;
-    }
-    
-    /* Icon buttons in control group - more compact */
-    .control-group .btn-icon {
-        min-width: 36px;
-        padding: 6px;
-        font-size: 14px;
-    }
-
-    /* Object Popup - Bottom Sheet Style, More Compact */
+    /* Object Popup - Bottom Sheet Style */
     .object-popup {
-        left: var(--spacing-xs) !important;
-        right: var(--spacing-xs) !important;
+        left: 0 !important;
+        right: 0 !important;
         bottom: 0 !important;
         top: auto !important;
         min-width: auto;
         max-width: none;
         border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        max-height: 35vh;  /* Smaller popup, less intrusive */
+        max-height: 50vh;
         overflow-y: auto;
-        padding: var(--spacing-sm) var(--spacing-md);  /* Tighter padding */
-    }
-    
-    .object-popup h3 {
-        font-size: 1.1rem;
-        margin-bottom: var(--spacing-sm);
-    }
-    
-    .object-popup p {
-        font-size: 0.9rem;
-        margin: var(--spacing-xs) 0;
     }
 
-    /* Search Results - Full Width */
-    .search-results {
-        max-height: 250px;
-    }
-
-    .search-result-item {
-        min-height: 44px;  /* Touch-friendly */
-        padding: var(--spacing-sm) var(--spacing-md);
-    }
-
-    /* Help Popup - More Scrollable on Mobile */
+    /* Help Popup - Full width on mobile */
     .help-popup {
         max-width: 95%;
-        max-height: 85vh;
-        padding: var(--spacing-md);
+        max-height: 80vh;
     }
 
-    .help-close-btn {
-        min-height: 44px;
-        min-width: 44px;
+    /* Welcome overlay - adjust for mobile */
+    .welcome-content {
+        max-width: 95%;
+        padding: var(--spacing-lg);
+    }
+
+    .welcome-content h2 {
+        font-size: 1.5rem;
     }
 }

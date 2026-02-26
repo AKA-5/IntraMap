@@ -36,11 +36,11 @@ function initializeCanvas() {
     let isPanning = false;
     let lastPosX, lastPosY;
     let dragStartTarget = null;
-    let isTouchPanning = false;
 
     // Handle object clicks - only trigger if minimal movement (true click, not drag)
     let clickStartPos = null;
     let clickStartTarget = null;
+    let hasMoved = false;
 
     // CONSOLIDATED MOUSE:DOWN - Handles both panning start AND click tracking
     canvas.on('mouse:down', function(opt) {
@@ -50,6 +50,7 @@ function initializeCanvas() {
         clickStartPos = { x: evt.clientX, y: evt.clientY };
         clickStartTarget = opt.target;
         dragStartTarget = opt.target;
+        hasMoved = false;
         
         // Enable panning in these cases:
         // 1. Clicking on empty space (no target)
@@ -75,44 +76,24 @@ function initializeCanvas() {
     canvas.on('mouse:move', function(opt) {
         const evt = opt.e;
         
+        // Track movement for tap vs drag detection
+        if (clickStartPos && !hasMoved) {
+            const distance = Math.sqrt(
+                Math.pow(evt.clientX - clickStartPos.x, 2) +
+                Math.pow(evt.clientY - clickStartPos.y, 2)
+            );
+            if (distance > 5) {
+                hasMoved = true;
+            }
+        }
+        
         // Handle panning movement
         if (isPanning) {
-            const vpt = canvas.viewportTransform;
-            vpt[4] += evt.clientX - lastPosX;
-            vpt[5] += evt.clientY - lastPosY;
+            const deltaX = evt.clientX - lastPosX;
+            const deltaY = evt.clientY - lastPosY;
             
-            // Apply pan constraints to prevent showing too much white space
-            const zoom = canvas.getZoom();
-            const canvasWidth = canvas.getWidth();
-            const canvasHeight = canvas.getHeight();
-            const wrapper = document.querySelector('.viewer-canvas-wrapper');
-            const containerWidth = wrapper ? wrapper.clientWidth : window.innerWidth;
-            const containerHeight = wrapper ? wrapper.clientHeight : window.innerHeight;
+            panCanvas(deltaX, deltaY);
             
-            // Allow small overscroll (100px) but keep content mostly visible
-            const padding = 100;
-            const scaledWidth = canvasWidth * zoom;
-            const scaledHeight = canvasHeight * zoom;
-            
-            // If canvas smaller than container, keep centered
-            if (scaledWidth <= containerWidth) {
-                vpt[4] = (containerWidth - canvasWidth) / 2;
-            } else {
-                // Allow limited overscroll
-                const maxPanX = padding;
-                const minPanX = containerWidth - scaledWidth - padding;
-                vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
-            }
-            
-            if (scaledHeight <= containerHeight) {
-                vpt[5] = (containerHeight - canvasHeight) / 2;
-            } else {
-                const maxPanY = padding;
-                const minPanY = containerHeight - scaledHeight - padding;
-                vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
-            }
-            
-            canvas.requestRenderAll();
             lastPosX = evt.clientX;
             lastPosY = evt.clientY;
         } else {
@@ -138,21 +119,9 @@ function initializeCanvas() {
             canvas.hoverCursor = 'grab';
             canvas.renderAll();
         } else {
-            // Handle object click (only if not panning)
-            // Don't show popup if user was touch panning
-            if (!isTouchPanning) {
-                // Only show details if it's a true click (minimal movement)
-                if (opt.target && opt.target.objectLabel && clickStartTarget === opt.target && clickStartPos) {
-                    const distance = Math.sqrt(
-                        Math.pow(evt.clientX - clickStartPos.x, 2) +
-                        Math.pow(evt.clientY - clickStartPos.y, 2)
-                    );
-                    
-                    // If movement is less than 5 pixels, treat as click
-                    if (distance < 5) {
-                        showObjectDetails(opt.target);
-                    }
-                }
+            // Handle object click (only if minimal movement)
+            if (opt.target && opt.target.objectLabel && clickStartTarget === opt.target && !hasMoved) {
+                showObjectDetails(opt.target);
             }
         }
         
@@ -160,6 +129,7 @@ function initializeCanvas() {
         clickStartPos = null;
         clickStartTarget = null;
         dragStartTarget = null;
+        hasMoved = false;
     });
 
     // Cancel panning if mouse leaves canvas
@@ -216,127 +186,87 @@ function initializeCanvas() {
         evt.stopPropagation();
     });
 
-    // Touch gesture support for mobile
+    // Touch gesture support for mobile - SIMPLIFIED AND IMPROVED
     let touchStartDistance = 0;
     let touchStartZoom = 1;
     let touchStartCenter = null;
     let touchStartPos = null;
     let touchLastPos = null;
-    let touchMoveDistance = 0;
-    let touchLongPressTimer = null;
-    let touchLongPressActivated = false;
+    let touchMoved = false;
+    let touchTarget = null;
     
-    // Use wrapper for better touch capture
-    const touchTarget = canvas.upperCanvasEl;
+    // Use canvas element for touch capture
+    const canvasTouchElement = canvas.upperCanvasEl;
     
-    // Track touch start for single-finger panning with LONG PRESS
-    touchTarget.addEventListener('touchstart', function(e) {
+    // Track touch start for single-finger interaction
+    canvasTouchElement.addEventListener('touchstart', function(e) {
         if (e.touches && e.touches.length === 1) {
+            const touch = e.touches[0];
             touchStartPos = {
-                x: e.touches[0].clientX,
-                y: e.touches[0].clientY
+                x: touch.clientX,
+                y: touch.clientY
             };
             touchLastPos = {
-                x: e.touches[0].clientX,
-                y: e.touches[0].clientY
+                x: touch.clientX,
+                y: touch.clientY
             };
-            isTouchPanning = false;
-            touchMoveDistance = 0;
-            touchLongPressActivated = false;
+            touchMoved = false;
             
-            // ALWAYS start long press timer - works on objects AND empty space
-            touchLongPressTimer = setTimeout(() => {
-                touchLongPressActivated = true;
-                console.log('Long press activated - pan mode enabled');
-                // Provide haptic feedback if supported
-                if (navigator.vibrate) {
-                    navigator.vibrate(50); // Short vibration to indicate pan mode
+            // Check if touch is on an object
+            const pointer = canvas.getPointer(touch, true);
+            const objects = canvas.getObjects();
+            touchTarget = null;
+            
+            for (let i = objects.length - 1; i >= 0; i--) {
+                const obj = objects[i];
+                if (obj.containsPoint(pointer) && obj.objectLabel) {
+                    touchTarget = obj;
+                    break;
                 }
-            }, 500); // Increased to 500ms for more deliberate action
-        } else {
-            // Multi-touch - reset single-finger tracking
-            if (touchLongPressTimer) {
-                clearTimeout(touchLongPressTimer);
-                touchLongPressTimer = null;
             }
+        } else if (e.touches && e.touches.length === 2) {
+            // Two finger pinch - reset single touch state
             touchStartPos = null;
             touchLastPos = null;
-            isTouchPanning = false;
-            touchLongPressActivated = false;
+            touchMoved = false;
+            touchTarget = null;
         }
     }, { passive: true });
     
-    // Native touchmove for smooth real-time panning (after long press)
-    touchTarget.addEventListener('touchmove', function(e) {
+    // Native touchmove for smooth real-time panning - INSTANT, NO DELAY
+    canvasTouchElement.addEventListener('touchmove', function(e) {
         if (e.touches && e.touches.length === 1 && touchStartPos && touchLastPos) {
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
+            const touch = e.touches[0];
+            const currentX = touch.clientX;
+            const currentY = touch.clientY;
             
-            // Calculate total distance from start
-            touchMoveDistance = Math.sqrt(
+            // Calculate movement distance from start
+            const totalDistance = Math.sqrt(
                 Math.pow(currentX - touchStartPos.x, 2) +
                 Math.pow(currentY - touchStartPos.y, 2)
             );
             
-            // DON'T cancel timer on movement - let user complete the hold
-            // This allows holding on object then dragging after 500ms
-            
-            // Only allow panning AFTER long press is activated AND significant movement
-            if (touchLongPressActivated && touchMoveDistance > 10) {
-                isTouchPanning = true;
-                console.log('Panning activated, distance:', touchMoveDistance);
-            }
-            
-            // Apply pan movement in real-time (Google Maps style)
-            if (isTouchPanning) {
+            // If movement exceeds threshold (10px), it's a drag not a tap
+            if (totalDistance > 10) {
+                touchMoved = true;
+                
                 // Calculate delta from last position
                 const deltaX = currentX - touchLastPos.x;
                 const deltaY = currentY - touchLastPos.y;
                 
-                const vpt = canvas.viewportTransform;
-                vpt[4] += deltaX;
-                vpt[5] += deltaY;
+                // Apply pan movement immediately (Google Maps style)
+                panCanvas(deltaX, deltaY);
                 
-                // Apply constraints
-                const zoom = canvas.getZoom();
-                const canvasWidth = canvas.getWidth();
-                const canvasHeight = canvas.getHeight();
-                const containerWidth = document.querySelector('.viewer-canvas-wrapper').clientWidth;
-                const containerHeight = document.querySelector('.viewer-canvas-wrapper').clientHeight;
-                
-                const scaledWidth = canvasWidth * zoom;
-                const scaledHeight = canvasHeight * zoom;
-                const padding = 100;
-                
-                // Apply constraints
-                if (scaledWidth <= containerWidth) {
-                    vpt[4] = (containerWidth - canvasWidth) / 2;
-                } else {
-                    const maxPanX = padding;
-                    const minPanX = containerWidth - scaledWidth - padding;
-                    vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
-                }
-                
-                if (scaledHeight <= containerHeight) {
-                    vpt[5] = (containerHeight - canvasHeight) / 2;
-                } else {
-                    const maxPanY = padding;
-                    const minPanY = containerHeight - scaledHeight - padding;
-                    vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
-                }
-                
-                canvas.requestRenderAll();
+                // Update last position for next frame
+                touchLastPos = {
+                    x: currentX,
+                    y: currentY
+                };
                 
                 // Prevent page scroll while panning - critical for mobile!
                 e.preventDefault();
                 e.stopPropagation();
             }
-            
-            // Update last position for next frame
-            touchLastPos = {
-                x: currentX,
-                y: currentY
-            };
         }
     }, { passive: false }); // passive: false allows preventDefault()
     
@@ -378,6 +308,46 @@ function initializeCanvas() {
             e.e.stopPropagation();
         }
     });
+
+    // Centralized pan function with constraints
+    function panCanvas(deltaX, deltaY) {
+        const vpt = canvas.viewportTransform;
+        vpt[4] += deltaX;
+        vpt[5] += deltaY;
+        
+        // Apply pan constraints to prevent excessive white space
+        const zoom = canvas.getZoom();
+        const canvasWidth = canvas.getWidth();
+        const canvasHeight = canvas.getHeight();
+        const wrapper = document.querySelector('.viewer-canvas-wrapper');
+        const containerWidth = wrapper ? wrapper.clientWidth : window.innerWidth;
+        const containerHeight = wrapper ? wrapper.clientHeight : window.innerHeight;
+        
+        // Allow small overscroll (100px) but keep content mostly visible
+        const padding = 100;
+        const scaledWidth = canvasWidth * zoom;
+        const scaledHeight = canvasHeight * zoom;
+        
+        // If canvas smaller than container, keep centered
+        if (scaledWidth <= containerWidth) {
+            vpt[4] = (containerWidth - canvasWidth) / 2;
+        } else {
+            // Allow limited overscroll
+            const maxPanX = padding;
+            const minPanX = containerWidth - scaledWidth - padding;
+            vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
+        }
+        
+        if (scaledHeight <= containerHeight) {
+            vpt[5] = (containerHeight - canvasHeight) / 2;
+        } else {
+            const maxPanY = padding;
+            const minPanY = containerHeight - scaledHeight - padding;
+            vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+        }
+        
+        canvas.requestRenderAll();
+    }
     
     canvas.on('touch:drag', function(e) {
         // Touch dragging now handled by native touchmove event for better performance
@@ -385,35 +355,13 @@ function initializeCanvas() {
     });
     
     // Reset touch tracking when gesture ends
-    touchTarget.addEventListener('touchend', function(e) {
-        // Clear long press timer if still active
-        if (touchLongPressTimer) {
-            clearTimeout(touchLongPressTimer);
-            touchLongPressTimer = null;
-        }
-        
-        // Handle touch end - check if it was a tap (not a pan)
-        // Only show popup if: 1) No long press activated, 2) Minimal movement
-        if (touchStartPos && touchMoveDistance < 10 && !touchLongPressActivated) {
-            // This was a quick tap - show popup!
-            const touch = e.changedTouches[0];
-            const canvasRect = canvas.upperCanvasEl.getBoundingClientRect();
-            
-            // Convert to canvas coordinates
-            const pointer = canvas.getPointer({ clientX: touch.clientX, clientY: touch.clientY }, true);
-            const objects = canvas.getObjects();
-            
-            // Find object at tap position
-            for (let i = objects.length - 1; i >= 0; i--) {
-                const obj = objects[i];
-                if (obj.containsPoint(pointer) && obj.objectLabel) {
-                    // Small delay to ensure touch events complete
-                    setTimeout(() => {
-                        showObjectDetails(obj);
-                    }, 50);
-                    break;
-                }
-            }
+    canvasTouchElement.addEventListener('touchend', function(e) {
+        // Handle touch end - check if it was a tap (not a drag)
+        if (touchStartPos && !touchMoved && touchTarget) {
+            // This was a quick tap on an object - show popup!
+            setTimeout(() => {
+                showObjectDetails(touchTarget);
+            }, 10);
         }
         
         // Reset all touch state
@@ -422,9 +370,8 @@ function initializeCanvas() {
         touchStartCenter = null;
         touchStartPos = null;
         touchLastPos = null;
-        isTouchPanning = false;
-        touchMoveDistance = 0;
-        touchLongPressActivated = false;
+        touchMoved = false;
+        touchTarget = null;
     });
 
     // Responsive canvas sizing
