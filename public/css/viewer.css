@@ -221,6 +221,8 @@ body {
     box-sizing: border-box;
     position: relative;
     touch-action: none;  /* Ensure no browser touch gestures interfere */
+    z-index: 1;  /* Below controls */
+    pointer-events: none;  /* Let controls be clickable */
 }
 
 .viewer-canvas-wrapper:active {
@@ -236,6 +238,7 @@ body {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
     cursor: grab;  /* Show grab cursor on canvas */
+    pointer-events: auto;  /* Canvas itself should capture events */
 }
 }
 
@@ -844,9 +847,9 @@ body {
         min-width: auto;
         max-width: none;
         border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        max-height: 60vh;  /* More space for content */
+        max-height: 35vh;  /* Smaller popup, less intrusive */
         overflow-y: auto;
-        padding: var(--spacing-md) var(--spacing-lg);
+        padding: var(--spacing-sm) var(--spacing-md);  /* Tighter padding */
     }
     
     .object-popup h3 {

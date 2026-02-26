@@ -244,14 +244,15 @@ function initializeCanvas() {
             touchMoveDistance = 0;
             touchLongPressActivated = false;
             
-            // Start long press timer (300ms hold to activate panning)
+            // ALWAYS start long press timer - works on objects AND empty space
             touchLongPressTimer = setTimeout(() => {
                 touchLongPressActivated = true;
-                // Optional: Provide haptic feedback if supported
+                console.log('Long press activated - pan mode enabled');
+                // Provide haptic feedback if supported
                 if (navigator.vibrate) {
                     navigator.vibrate(50); // Short vibration to indicate pan mode
                 }
-            }, 300); // 300ms hold time
+            }, 500); // Increased to 500ms for more deliberate action
         } else {
             // Multi-touch - reset single-finger tracking
             if (touchLongPressTimer) {
@@ -277,17 +278,13 @@ function initializeCanvas() {
                 Math.pow(currentY - touchStartPos.y, 2)
             );
             
-            // If user moves before long press activates, cancel the timer (it's a swipe/tap)
-            if (!touchLongPressActivated && touchMoveDistance > 10) {
-                if (touchLongPressTimer) {
-                    clearTimeout(touchLongPressTimer);
-                    touchLongPressTimer = null;
-                }
-            }
+            // DON'T cancel timer on movement - let user complete the hold
+            // This allows holding on object then dragging after 500ms
             
-            // Only allow panning AFTER long press is activated
-            if (touchLongPressActivated && touchMoveDistance > 5) {
+            // Only allow panning AFTER long press is activated AND significant movement
+            if (touchLongPressActivated && touchMoveDistance > 10) {
                 isTouchPanning = true;
+                console.log('Panning activated, distance:', touchMoveDistance);
             }
             
             // Apply pan movement in real-time (Google Maps style)
