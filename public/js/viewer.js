@@ -22,7 +22,7 @@ function initializeCanvas() {
         selection: false,
         interactive: true,
         enableRetinaScaling: true,
-        allowTouchScrolling: true, // Enable touch scrolling for panning
+        allowTouchScrolling: false, // Disable to allow custom touch panning
         stopContextMenu: true,
         renderOnAddRemove: true,
         hoverCursor: 'grab',
@@ -42,48 +42,13 @@ function initializeCanvas() {
     let clickStartPos = null;
     let clickStartTarget = null;
 
-    canvas.on('mouse:down', (e) => {
-        // Track click start position and target
-        clickStartPos = { x: e.e.clientX, y: e.e.clientY };
-        clickStartTarget = e.target;
-    });
-
-    canvas.on('mouse:up', (e) => {
-        // Don't show popup if user was panning (touch or mouse)
-        if (isTouchPanning || isPanning) {
-            clickStartPos = null;
-            clickStartTarget = null;
-            return;
-        }
-        
-        // Only show details if it's a true click (minimal movement)
-        if (e.target && e.target.objectLabel && clickStartTarget === e.target && clickStartPos) {
-            const distance = Math.sqrt(
-                Math.pow(e.e.clientX - clickStartPos.x, 2) +
-                Math.pow(e.e.clientY - clickStartPos.y, 2)
-            );
-            
-            // If movement is less than 5 pixels, treat as click
-            if (distance < 5) {
-                showObjectDetails(e.target);
-            }
-        }
-        clickStartPos = null;
-        clickStartTarget = null;
-    });
-
-    // Update cursor on mouse move
-    canvas.on('mouse:move', (e) => {
-        if (e.target && e.target.objectLabel) {
-            canvas.defaultCursor = 'pointer';
-        } else {
-            canvas.defaultCursor = 'grab';
-        }
-    });
-
-    // Enable panning with mouse drag on empty space (Google Maps style)
+    // CONSOLIDATED MOUSE:DOWN - Handles both panning start AND click tracking
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
+        
+        // Track click start position and target for click detection
+        clickStartPos = { x: evt.clientX, y: evt.clientY };
+        clickStartTarget = opt.target;
         dragStartTarget = opt.target;
         
         // Enable panning if clicking on empty space (no target)
@@ -99,9 +64,12 @@ function initializeCanvas() {
         }
     });
 
+    // CONSOLIDATED MOUSE:MOVE - Handles panning AND cursor updates
     canvas.on('mouse:move', function(opt) {
+        const evt = opt.e;
+        
+        // Handle panning movement
         if (isPanning) {
-            const evt = opt.e;
             const vpt = canvas.viewportTransform;
             vpt[4] += evt.clientX - lastPosX;
             vpt[5] += evt.clientY - lastPosY;
@@ -140,10 +108,21 @@ function initializeCanvas() {
             canvas.requestRenderAll();
             lastPosX = evt.clientX;
             lastPosY = evt.clientY;
+        } else {
+            // Update cursor when not panning
+            if (opt.target && opt.target.objectLabel) {
+                canvas.defaultCursor = 'pointer';
+            } else {
+                canvas.defaultCursor = 'grab';
+            }
         }
     });
 
+    // CONSOLIDATED MOUSE:UP - Handles panning end AND click detection
     canvas.on('mouse:up', function(opt) {
+        const evt = opt.e;
+        
+        // Handle panning end
         if (isPanning) {
             canvas.setViewportTransform(canvas.viewportTransform);
             isPanning = false;
@@ -151,7 +130,28 @@ function initializeCanvas() {
             canvas.defaultCursor = 'grab';
             canvas.hoverCursor = 'grab';
             canvas.renderAll();
+        } else {
+            // Handle object click (only if not panning)
+            // Don't show popup if user was touch panning
+            if (!isTouchPanning) {
+                // Only show details if it's a true click (minimal movement)
+                if (opt.target && opt.target.objectLabel && clickStartTarget === opt.target && clickStartPos) {
+                    const distance = Math.sqrt(
+                        Math.pow(evt.clientX - clickStartPos.x, 2) +
+                        Math.pow(evt.clientY - clickStartPos.y, 2)
+                    );
+                    
+                    // If movement is less than 5 pixels, treat as click
+                    if (distance < 5) {
+                        showObjectDetails(opt.target);
+                    }
+                }
+            }
         }
+        
+        // Reset click tracking
+        clickStartPos = null;
+        clickStartTarget = null;
         dragStartTarget = null;
     });
 
@@ -211,8 +211,11 @@ function initializeCanvas() {
     let touchLastPos = null;
     let touchMoveDistance = 0;
     
+    // Use wrapper for better touch capture
+    const touchTarget = canvas.upperCanvasEl;
+    
     // Track touch start for single-finger panning
-    canvas.upperCanvasEl.addEventListener('touchstart', function(e) {
+    touchTarget.addEventListener('touchstart', function(e) {
         if (e.touches && e.touches.length === 1) {
             touchStartPos = {
                 x: e.touches[0].clientX,
@@ -233,7 +236,7 @@ function initializeCanvas() {
     }, { passive: true });
     
     // Native touchmove for smooth real-time panning
-    canvas.upperCanvasEl.addEventListener('touchmove', function(e) {
+    touchTarget.addEventListener('touchmove', function(e) {
         if (e.touches && e.touches.length === 1 && touchStartPos && touchLastPos) {
             const currentX = e.touches[0].clientX;
             const currentY = e.touches[0].clientY;
@@ -244,8 +247,8 @@ function initializeCanvas() {
                 Math.pow(currentY - touchStartPos.y, 2)
             );
             
-            // Start panning after small movement (5px for responsive feel)
-            if (touchMoveDistance > 5) {
+            // Start panning after small movement (3px for very responsive feel)
+            if (touchMoveDistance > 3) {
                 isTouchPanning = true;
             }
             
@@ -289,8 +292,9 @@ function initializeCanvas() {
                 
                 canvas.requestRenderAll();
                 
-                // Prevent page scroll while panning
+                // Prevent page scroll while panning - critical for mobile!
                 e.preventDefault();
+                e.stopPropagation();
             }
             
             // Update last position for next frame
@@ -346,7 +350,7 @@ function initializeCanvas() {
     });
     
     // Reset touch tracking when gesture ends
-    canvas.upperCanvasEl.addEventListener('touchend', function() {
+    touchTarget.addEventListener('touchend', function() {
         touchStartDistance = 0;
         touchStartZoom = 1;
         touchStartCenter = null;

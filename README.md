@@ -7,6 +7,8 @@ A modern, production-ready web application for creating and sharing interactive 
 ![Cost](https://img.shields.io/badge/cost-$0%2Fmonth-brightgreen)
 ![Mobile](https://img.shields.io/badge/mobile-optimized-success)
 
+> **✨ What's New in v2.0:** Fixed panning/dragging on all devices, enhanced zoom controls, comprehensive keyboard shortcuts, and detailed user guide!
+
 ---
 
 ## ✨ Features
@@ -28,10 +30,13 @@ A modern, production-ready web application for creating and sharing interactive 
 
 **Advanced Editing**
 - **Property panel** - Edit name, tags, colors, opacity, borders
+- **Multi-selection** - Select multiple objects using Shift+Click or drag selection
 - **Border customization** - Width (0-20px), style (solid/dashed/dotted)
 - **Layer controls** - Bring to front, send to back
 - **Lock objects** - Prevent accidental modifications
-- **Keyboard shortcuts** - Undo (Ctrl+Z), Redo (Ctrl+Y), Delete, Escape
+- **Copy & Paste** - Duplicate objects with Ctrl+C/V
+- **Undo/Redo** - 50-step history with Ctrl+Z/Y
+- **Keyboard shortcuts** - Comprehensive shortcuts for power users
 
 **Data Management**
 - **Auto-save** - Local storage backup every 10 seconds
@@ -39,7 +44,8 @@ A modern, production-ready web application for creating and sharing interactive 
 - **QR code generation** - Instant shareable links
 - **Demo data** - Load comprehensive Centaurus Shopping Mall example
 
-### 📱 For Visitors
+### 📱 For Visitorspanning** - Smooth one-finger drag navigation like Google Maps
+- **Pinch-to-zoom** - Two-finger zoom with smooth scaling
 
 **Mobile-First Design**
 - **Touch-optimized scrolling** - Smooth panning like Google Maps
@@ -51,6 +57,8 @@ A modern, production-ready web application for creating and sharing interactive 
 - **Smart search** - Find locations by name or tags
 - **Interactive floor plans** - Click locations for details
 - **Floor switching** - Easy dropdown selector
+- **Pan & Zoom** - Mouse drag, arrow keys, zoom buttons, and keyboard shortcuts
+- **Reset view** - Quickly return to centered view
 - **Precise click detection** - Accurate selection of adjacent items
 
 **Performance**
@@ -190,9 +198,11 @@ IntraMap/
 - Visit `viewer.html?building=<building-id>`
 - Use search bar to find locations
 - Click locations for details
-- Switch floors using dropdown
-
-**Mobile Navigation:**
+- Switc** - Touch and drag with one finger to move around
+- **Zoom** - Pinch with two fingers or use +/- buttons
+- **Search** - Type location name or tags
+- **Details** - Tap any location to see information
+- **Responsive** - Zoom controls visible and optimized for touch
 - **Pan/Scroll** - Touch and drag anywhere on white canvas area
 - **Search** - Type location name or tags
 - **Details** - Tap any location box
@@ -291,17 +301,31 @@ const API = new IntraMapAPI('https://your-worker.workers.dev');
 ---
 
 ## ⌨️ Keyboard Shortcuts
-
-### Admin Editor
-| Shortcut | Action |
-|----------|--------|
+C` | Copy selected object |
+| `Ctrl + V` | Paste copied object |
 | `Ctrl + Z` | Undo last action (50-step history) |
-| `Ctrl + Y` | Redo action |
-| `Delete` | Remove selected object |
+| `Ctrl + Y` / `Ctrl + Shift + Z` | Redo action |
+| `Ctrl + S` | Save draft to browser |
+| `Ctrl + 0` | Fit canvas to screen |
+| `Delete` / `Backspace` | Remove selected object(s) |
 | `Escape` | Deselect object / Cancel action |
-| `Ctrl + S` | Save to cloud (custom binding) |
+| `Shift + Click` | Multi-select objects |
+| `Space + Drag` | Pan canvas (temporary pan mode) |
+| `Arrow Keys` | Pan canvas |
+| `+ / -` | Zoom in/out |
+
+> **💡 Pro Tip:** Hold Shift and click multiple objects to select and edit them together!
 
 ### Viewer
+| Shortcut | Action |
+|----------|--------|
+| `Arrow Keys` | Pan map in any direction |
+| `+ / -` | Zoom in/out |
+| `0` | Reset view to center |
+| `Escape` | Close popup / Clear highlights |
+| `Space` | Toggle welcome overlay |
+| `Ctrl + Scroll` | Zoom to cursor position |
+| `Shift + Scroll` | Horizontal pan
 | Shortcut | Action |
 |----------|--------|
 | `Escape` | Close popup / Clear search |
@@ -358,11 +382,18 @@ const API = new IntraMapAPI('https://your-worker.workers.dev');
 
 ### Common Issues
 
-**Problem: Can't save building to cloud**
-- ✅ Check browser console (F12) for errors
-- ✅ Verify Cloudflare Worker is deployed and accessible
-- ✅ Confirm API URL in HTML matches your worker URL
-- ✅ Check KV namespace is bound in `wrangler.toml`
+**Problem: Panning/dragging not working**
+- ✅ **FIXED in v2.0!** - Update to latest version
+- ✅ Desktop: Click and drag on empty space (not on objects)
+- ✅ Desktop: Hold Space key and drag anywhere
+- ✅ Mobile: Touch and drag with one finger
+- ✅ If still not working, hard refresh (Ctrl+Shift+R)
+
+**Problem: Zoom controls not visible**
+- ✅ **FIXED in v2.0!** - Zoom buttons now always visible
+- ✅ Look for +/- buttons in bottom-right corner
+- ✅ Also available via keyboard: +/- keys
+- ✅ Mobile: Pinch to zoom also worksml`
 - ✅ Test worker directly: `https://your-worker.workers.dev/api/buildings/test`
 
 **Problem: Viewer shows "Building not found"**
@@ -422,11 +453,17 @@ if (requestsPerMinute > 100) {
   return new Response('Too many requests', { status: 429 });
 }
 ```
+### Getting Started
+- **[USER_GUIDE.md](USER_GUIDE.md)** - 📖 **NEW!** Complete user guide with hidden features & pro tips
+- **[QUICKSTART.md](QUICKSTART.md)** - 5-minute setup guide
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Detailed deployment instructions
 
-**Enable CORS:**
-```javascript
-// Allow only your domain
-headers.set('Access-Control-Allow-Origin', 'https://yourdomain.com');
+### Technical Documentation
+- **[TECHNICAL_ARCHITECTURE.md](docs/TECHNICAL_ARCHITECTURE.md)** - System design and architecture
+- **[PRD.md](docs/PRD.md)** - Product requirements document
+- **[TESTING.md](TESTING.md)** - Testing procedures and guidelines
+
+> **👉 New users:** Start with [USER_GUIDE.md](USER_GUIDE.md) for a comprehensive walkthrough!/yourdomain.com');
 ```
 
 **Use Environment Variables:**

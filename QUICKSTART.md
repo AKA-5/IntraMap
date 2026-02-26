@@ -1,5 +1,9 @@
 # 🎉 IntraMap - Quick Start Guide
 
+**Version:** 2.0.0 | **Last Updated:** February 26, 2026
+
+> **✨ New in v2.0:** Fixed panning/dragging issues, enhanced documentation, and comprehensive user guide!
+
 ## ✅ What's Been Built
 
 Your **complete, production-ready indoor floor plan navigation system** is ready! Here's what you have:
@@ -16,14 +20,21 @@ Your **complete, production-ready indoor floor plan navigation system** is ready
 
 ### 🎨 Features
 - ✅ Drag-and-drop floor plan editor
+- ✅ Multi-selection (Shift+Click) and copy/paste
 - ✅ 13 pre-made icons (restaurant, restroom, exit, etc.)
-- ✅ Multi-floor support (3 floors)
+- ✅ Multi-floor support
 - ✅ Smart search by name/tags
 - ✅ QR code generation
-- ✅ "You Are Here" marker + visual directions
+- ✅ Pan & zoom (mouse, touch, keyboard) - **FIXED in v2.0!**
+- ✅ Undo/Redo (50-step history)
 - ✅ Auto-save + cloud sync
 - ✅ PWA with offline support
 - ✅ 100% free hosting
+
+### 📚 Documentation
+- ✅ **[USER_GUIDE.md](USER_GUIDE.md)** - Complete user manual with pro tips
+- ✅ **[README.md](README.md)** - Technical overview
+- ✅ **[CHANGELOG.md](CHANGELOG.md)** - Version history and fixes
 
 ---
 

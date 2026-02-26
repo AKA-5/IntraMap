@@ -240,40 +240,51 @@ body {
 }
 
 /* Controls */
-/* Controls - Always visible and consistent on all devices */
+/* Controls - Always visible and prominent on all devices */
 .viewer-controls {
     position: fixed;
-    bottom: var(--spacing-lg);
-    right: var(--spacing-lg);
-    display: flex;
+    bottom: 20px;
+    right: 20px;
+    display: flex !important;  /* Force display */
     flex-direction: column;
-    gap: var(--spacing-sm);
-    z-index: 1000;
+    gap: 12px;
+    z-index: 9999;  /* Ensure above everything */
+    pointer-events: auto;  /* Ensure clickable */
 }
 
 .control-group {
-    background: rgba(255, 255, 255, 0.98);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-xl);
-    padding: var(--spacing-sm);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 8px;
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .control-group .btn-icon {
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 48px;
+    min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+    background: white;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
 }
 
 .control-group .btn-icon:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-lg);
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #f9fafb;
+    border-color: #3B82F6;
+}
+
+.control-group .btn-icon svg {
+    pointer-events: none;  /* Ensure SVG doesn't block clicks */
 }
 
 @keyframes pulse {
