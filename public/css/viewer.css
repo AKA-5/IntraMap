@@ -670,43 +670,43 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-    /* Compact header for mobile */
+    /* ── Header ─────────────────────────────────────────────
+       Row 1: [← Home]  [Search …………………]
+       Row 2: Building title
+       Row 3: Floor selector
+    ──────────────────────────────────────────────────────── */
     .viewer-header {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
         flex-shrink: 0;
-        padding: var(--spacing-xs) var(--spacing-sm);
     }
-    
+
     /* Hide version indicator on mobile */
     .version-indicator {
         display: none !important;
     }
-    
-    /* Back Button - Compact */
+
+    /* Back Button — inline flow (no more absolute positioning) */
     .back-btn {
-        position: absolute;
-        left: 15px;
-        top: 15px;
+        position: static;
+        flex-shrink: 0;
+        order: 0;
         padding: 6px 12px;
         font-size: 13px;
         min-height: 36px;
     }
 
-    /* Building Title - Compact */
-    .building-title-main {
-        padding: var(--spacing-xs) 0;
-    }
-
-    .building-title-main h1 {
-        font-size: 1.25rem;
-    }
-
-    /* Search Bar - Full Width */
+    /* Search Bar — fills the rest of the first row */
     .header-search {
-        position: relative;
-        top: auto;
-        left: auto;
-        width: 100%;
-        padding: var(--spacing-xs) 0;
+        position: static;
+        order: 1;
+        flex: 1 1 120px;
+        min-width: 0;
+        padding: 0;
+        z-index: auto;
     }
 
     .search-bar {
@@ -714,13 +714,26 @@ body {
     }
 
     .search-bar input {
-        min-height: 40px;
+        min-height: 36px;
         font-size: 14px;
     }
 
-    /* Floor Selector - Full Width */
-    .floor-selector-wrapper {
+    /* Building Title — full row */
+    .building-title-main {
+        order: 2;
         width: 100%;
+        padding: 4px 0;
+    }
+
+    .building-title-main h1 {
+        font-size: 1.1rem;
+    }
+
+    /* Floor Selector — full row */
+    .floor-selector-wrapper {
+        order: 3;
+        width: 100%;
+        padding: 0 0 4px;
     }
 
     .floor-selector {
@@ -729,15 +742,40 @@ body {
         font-size: 14px;
     }
 
-    /* Canvas wrapper - reduce padding on mobile to maximise map area */
+    /* ── Canvas — native browser scroll ────────────────────
+       Container becomes a scroll viewport; wrapper and canvas
+       can be larger than the screen.  1-finger = scroll;
+       2-finger pinch = our custom zoom handler.
+    ──────────────────────────────────────────────────────── */
+    .viewer-canvas-container {
+        overflow: scroll;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x pan-y;  /* 1-finger scroll by browser */
+        overscroll-behavior: contain;
+    }
+
     .viewer-canvas-wrapper {
-        padding: 10px;
+        /* Let content size the wrapper; don’t force-centre */
+        display: block;
+        width:  fit-content;
+        min-width:  100%;
+        height: fit-content;
+        min-height: 100%;
+        padding: 0;
+        cursor: default;
+        touch-action: pan-x pan-y;
+    }
+
+    #viewerCanvas {
+        max-width:  none;
+        max-height: none;
+        cursor: default;
     }
 
     /* Controls - Bottom right for easier thumb access */
     .viewer-controls {
         bottom: 15px !important;
-        right: 15px !important;
+        right:  15px !important;
         gap: 8px;
     }
 
@@ -745,18 +783,18 @@ body {
         padding: 8px;
         gap: 6px;
     }
-    
+
     .control-group .btn-icon {
-        min-width: 42px;
+        min-width:  42px;
         min-height: 42px;
     }
 
     /* Object Popup - compact card, leaves room for the right-side controls */
     .object-popup {
-        left: 12px !important;
-        right: 78px !important;  /* 60px controls + ~18px gap */
+        left:   12px !important;
+        right:  78px !important;  /* 60px controls + ~18px gap */
         bottom: 16px !important;
-        top: auto !important;
+        top:    auto !important;
         min-width: 0;
         max-width: none;
         border-radius: 14px;

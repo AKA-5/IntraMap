@@ -17,19 +17,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Initialize Fabric.js canvas (read-only mode)
 function initializeCanvas() {
+    // On mobile, allow native browser scroll (Fabric must NOT call preventDefault on touch)
+    const _isMobile = () => window.innerWidth <= 768;
+
     canvas = new fabric.Canvas('viewerCanvas', {
         backgroundColor: '#FFFFFF',
         selection: false,
         interactive: true,
         enableRetinaScaling: true,
-        allowTouchScrolling: false, // Disable to allow custom touch panning
+        allowTouchScrolling: true,  // Let browser scroll on mobile; we control preventDefault
         stopContextMenu: true,
         renderOnAddRemove: true,
         hoverCursor: 'grab',
         moveCursor: 'grab',
         defaultCursor: 'grab',
-        perPixelTargetFind: true,  // Precise click detection on actual shape, not bounding box
-        targetFindTolerance: 4      // Small tolerance for easier clicking on thin borders
+        perPixelTargetFind: true,
+        targetFindTolerance: 4
     });
 
     // Panning state variables (both mouse and touch)
@@ -42,34 +45,23 @@ function initializeCanvas() {
     let clickStartTarget = null;
     let hasMoved = false;
 
-    // CONSOLIDATED MOUSE:DOWN - Handles both panning start AND click tracking
+    // MOUSE:DOWN - always start panning (Google Maps style: drag from anywhere)
     canvas.on('mouse:down', function(opt) {
         const evt = opt.e;
-        
-        // Track click start position and target for click detection
-        clickStartPos = { x: evt.clientX, y: evt.clientY };
+
+        clickStartPos   = { x: evt.clientX, y: evt.clientY };
         clickStartTarget = opt.target;
-        dragStartTarget = opt.target;
         hasMoved = false;
-        
-        // Enable panning in these cases:
-        // 1. Clicking on empty space (no target)
-        // 2. Shift+Click anywhere (even on objects) - for easy panning
-        // 3. Right-click drag (for desktop users)
-        if (!opt.target || evt.shiftKey || evt.button === 2) {
-            isPanning = true;
-            canvas.selection = false;
-            lastPosX = evt.clientX;
-            lastPosY = evt.clientY;
-            canvas.defaultCursor = 'grabbing';
-            canvas.hoverCursor = 'grabbing';
-            canvas.renderAll();
-            
-            // Prevent context menu on right-click
-            if (evt.button === 2) {
-                evt.preventDefault();
-            }
-        }
+
+        isPanning = true;
+        canvas.selection = false;
+        lastPosX = evt.clientX;
+        lastPosY = evt.clientY;
+        canvas.defaultCursor = 'grabbing';
+        canvas.hoverCursor   = 'grabbing';
+        canvas.renderAll();
+
+        if (evt.button === 2) evt.preventDefault();
     });
 
     // CONSOLIDATED MOUSE:MOVE - Handles panning AND cursor updates
@@ -106,29 +98,24 @@ function initializeCanvas() {
         }
     });
 
-    // CONSOLIDATED MOUSE:UP - Handles panning end AND click detection
+    // MOUSE:UP - end panning, then show popup if it was a clean click (no movement)
     canvas.on('mouse:up', function(opt) {
-        const evt = opt.e;
-        
-        // Handle panning end
         if (isPanning) {
             canvas.setViewportTransform(canvas.viewportTransform);
             isPanning = false;
             canvas.selection = false;
             canvas.defaultCursor = 'grab';
-            canvas.hoverCursor = 'grab';
+            canvas.hoverCursor   = 'grab';
             canvas.renderAll();
-        } else {
-            // Handle object click (only if minimal movement)
-            if (opt.target && opt.target.objectLabel && clickStartTarget === opt.target && !hasMoved) {
-                showObjectDetails(opt.target);
-            }
         }
-        
-        // Reset click tracking
-        clickStartPos = null;
+
+        // Show popup if minimal movement on a labelled object
+        if (!hasMoved && opt.target && opt.target.objectLabel && clickStartTarget === opt.target) {
+            showObjectDetails(opt.target);
+        }
+
+        clickStartPos    = null;
         clickStartTarget = null;
-        dragStartTarget = null;
         hasMoved = false;
     });
 
@@ -198,32 +185,30 @@ function initializeCanvas() {
     let touchMoved = false;
     let touchTapTarget = null;
 
-    // Centralized pan function with constraints
+    // Centralised pan function — constraints are in canvas-pixel / content space
     function panCanvas(deltaX, deltaY) {
-        const vpt = canvas.viewportTransform;
+        const vpt  = canvas.viewportTransform;
         vpt[4] += deltaX;
         vpt[5] += deltaY;
 
-        const zoom = canvas.getZoom();
-        const canvasWidth = canvas.getWidth();
-        const canvasHeight = canvas.getHeight();
-        const wrapper = document.querySelector('.viewer-canvas-wrapper');
-        const containerWidth = wrapper ? wrapper.clientWidth : window.innerWidth;
-        const containerHeight = wrapper ? wrapper.clientHeight : window.innerHeight;
-        const padding = 80;
-        const scaledWidth = canvasWidth * zoom;
-        const scaledHeight = canvasHeight * zoom;
+        const zoom   = canvas.getZoom();
+        const cw     = canvas.getWidth();   // canvas DOM size in pixels
+        const ch     = canvas.getHeight();
+        const bw     = canvas.baseWidth  || (cw / zoom);
+        const bh     = canvas.baseHeight || (ch / zoom);
+        const contW  = zoom * bw;  // full content width in canvas pixels at current zoom
+        const contH  = zoom * bh;
+        const pad    = 40;
 
-        if (scaledWidth <= containerWidth) {
-            vpt[4] = (containerWidth - canvasWidth) / 2;
-        } else {
-            vpt[4] = Math.min(padding, Math.max(containerWidth - scaledWidth - padding, vpt[4]));
-        }
-        if (scaledHeight <= containerHeight) {
-            vpt[5] = (containerHeight - canvasHeight) / 2;
-        } else {
-            vpt[5] = Math.min(padding, Math.max(containerHeight - scaledHeight - padding, vpt[5]));
-        }
+        // Keep content anchored — allow pad-px overscroll at each edge
+        vpt[4] = (contW <= cw)
+            ? (cw - contW) / 2  // content fits → centre
+            : Math.min(pad, Math.max(cw - contW - pad, vpt[4]));
+
+        vpt[5] = (contH <= ch)
+            ? (ch - contH) / 2
+            : Math.min(pad, Math.max(ch - contH - pad, vpt[5]));
+
         canvas.requestRenderAll();
     }
 
@@ -276,28 +261,53 @@ function initializeCanvas() {
     touchContainer.addEventListener('touchmove', function(e) {
         if (e.touches.length === 1 && touchStartPos) {
             const t = e.touches[0];
-            const dx = t.clientX - touchLastPos.x;
-            const dy = t.clientY - touchLastPos.y;
             const totalDist = Math.hypot(t.clientX - touchStartPos.x, t.clientY - touchStartPos.y);
+            if (totalDist > 8) touchMoved = true;
 
-            if (totalDist > 8 || touchMoved) {
-                touchMoved = true;
-                panCanvas(dx, dy);
+            if (_isMobile()) {
+                // Mobile: let browser handle 1-finger scroll — do NOT preventDefault
+                // just track movement for tap vs scroll detection
+                touchLastPos = { x: t.clientX, y: t.clientY };
+            } else {
+                // Desktop / tablet: custom Fabric panning
+                const dx = t.clientX - touchLastPos.x;
+                const dy = t.clientY - touchLastPos.y;
+                if (touchMoved) panCanvas(dx, dy);
+                touchLastPos = { x: t.clientX, y: t.clientY };
+                e.preventDefault();
             }
 
-            // Always update lastPos so delta stays frame-accurate
-            touchLastPos = { x: t.clientX, y: t.clientY };
-            e.preventDefault(); // stop browser scroll
-
         } else if (e.touches.length === 2 && touchStartDistance > 0) {
+            // Pinch-to-zoom (both mobile and desktop)
             const t1 = e.touches[0], t2 = e.touches[1];
             const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-            let newZoom = touchStartZoom * (dist / touchStartDistance);
-            newZoom = Math.max(0.3, Math.min(4, newZoom));
-            canvas.zoomToPoint(new fabric.Point(touchStartCenter.x, touchStartCenter.y), newZoom);
+            let newZoom = Math.max(0.3, Math.min(4, touchStartZoom * (dist / touchStartDistance)));
+
+            if (_isMobile()) {
+                // Mobile: resize canvas DOM so native scroll still covers the full content
+                const bw = canvas.baseWidth  || 600;
+                const bh = canvas.baseHeight || 600;
+                canvas.setWidth(bw  * newZoom);
+                canvas.setHeight(bh * newZoom);
+                canvas.setViewportTransform([newZoom, 0, 0, newZoom, 0, 0]);
+                canvas.renderAll();
+            } else {
+                canvas.zoomToPoint(new fabric.Point(touchStartCenter.x, touchStartCenter.y), newZoom);
+            }
             e.preventDefault();
         }
     }, { capture: true, passive: false });
+
+    // Keep pinch starting state up-to-date on touchstart for 2-finger
+    touchContainer.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2 && _isMobile()) {
+            const t1 = e.touches[0], t2 = e.touches[1];
+            touchStartDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            touchStartZoom = canvas.getZoom();
+            touchStartCenter = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+        }
+    }, { capture: false, passive: true });
+    // (The main touchstart handler with capture:true above also sets these — this is a safety net)
 
     touchContainer.addEventListener('touchend', function(e) {
         if (!touchMoved && touchTapTarget) {
@@ -376,50 +386,50 @@ function fitCanvasToContent() {
     centerCanvas();
 }
 
-// Center canvas in viewport
+// Center canvas in viewport (desktop only)
 function centerCanvas() {
-    const zoom = canvas.getZoom();
-    const canvasWidth = canvas.getWidth();
-    const canvasHeight = canvas.getHeight();
-    const wrapper = document.querySelector('.viewer-canvas-wrapper');
-    
-    if (!wrapper) return;
-    
-    const containerWidth = wrapper.clientWidth;
-    const containerHeight = wrapper.clientHeight;
-    
-    // Calculate how much space is left after placing the canvas
-    const offsetX = (containerWidth - canvasWidth) / 2;
-    const offsetY = (containerHeight - canvasHeight) / 2;
-    
-    // Center the canvas by adjusting viewport transform
+    if (window.innerWidth <= 768) return;  // Mobile uses native CSS scroll
+
+    // After resizeCanvas the canvas DOM size already matches the initial content size,
+    // so no viewport offset is needed — content starts at (0,0).
     const vpt = canvas.viewportTransform;
-    vpt[4] = offsetX;
-    vpt[5] = offsetY;
-    
+    vpt[4] = 0;
+    vpt[5] = 0;
     canvas.requestRenderAll();
 }
 
 // Resize canvas to fit container while maintaining content aspect ratio
 function resizeCanvas() {
+    const baseWidth  = canvas.baseWidth  || 600;
+    const baseHeight = canvas.baseHeight || 600;
+    const isMobile   = window.innerWidth <= 768;
+
+    if (isMobile) {
+        // MOBILE: render the canvas at >= natural size so the browser
+        // scroll container covers the full map.
+        // Use at least screen-width scale so no horizontal letterboxing.
+        let scale = Math.max(1.0, window.innerWidth / baseWidth);
+        scale = Math.min(scale, 2.5);
+        canvas.setWidth(baseWidth   * scale);
+        canvas.setHeight(baseHeight * scale);
+        // Reset viewport transform so pan offsets don’t carry over.
+        canvas.setViewportTransform([scale, 0, 0, scale, 0, 0]);
+        canvas.renderAll();
+        return; // Skip centerCanvas — native scroll handles navigation
+    }
+
+    // DESKTOP: fit to wrapper, keeping a small padding
     const container = document.querySelector('.viewer-canvas-wrapper');
     if (!container) return;
     const containerWidth  = container.clientWidth;
     const containerHeight = container.clientHeight;
+    const pad = 20;
 
-    const baseWidth  = canvas.baseWidth  || 600;
-    const baseHeight = canvas.baseHeight || 600;
-
-    const isMobile = window.innerWidth <= 768;
-    // Padding is 10px on mobile, 20px on desktop (set in CSS)
-    const pad = isMobile ? 10 : 20;
-
-    // Scale to fill available space (subtract padding both sides)
     let scale = Math.min(
         (containerWidth  - pad * 2) / baseWidth,
         (containerHeight - pad * 2) / baseHeight
     );
-    scale = Math.max(0.15, Math.min(scale, isMobile ? 2.5 : 2.0));
+    scale = Math.max(0.15, Math.min(scale, 2.0));
 
     canvas.setWidth(baseWidth   * scale);
     canvas.setHeight(baseHeight * scale);
@@ -965,27 +975,40 @@ function getDirections() {
     // Feature disabled
 }
 
+// Helper: after zooming on mobile, resize the canvas DOM element so
+// native scroll always covers the full content area.
+function _applyZoomMobile(newZoom) {
+    const bw = canvas.baseWidth  || 600;
+    const bh = canvas.baseHeight || 600;
+    canvas.setWidth(bw  * newZoom);
+    canvas.setHeight(bh * newZoom);
+    canvas.setViewportTransform([newZoom, 0, 0, newZoom, 0, 0]);
+    canvas.renderAll();
+}
+
 // Zoom controls
 function zoomIn() {
     let zoom = canvas.getZoom();
-    zoom = zoom * 1.2;
-    if (zoom > 4) zoom = 4; // Max zoom limit
-    
-    // Zoom to center
-    const center = canvas.getCenter();
-    canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom);
-    canvas.renderAll();
+    zoom = Math.min(zoom * 1.2, 4);
+    if (window.innerWidth <= 768) {
+        _applyZoomMobile(zoom);
+    } else {
+        const center = canvas.getCenter();
+        canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom);
+        canvas.renderAll();
+    }
 }
 
 function zoomOut() {
     let zoom = canvas.getZoom();
-    zoom = zoom / 1.2;
-    if (zoom < 0.3) zoom = 0.3; // Min zoom limit
-    
-    // Zoom to center
-    const center = canvas.getCenter();
-    canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom);
-    canvas.renderAll();
+    zoom = Math.max(zoom / 1.2, 0.3);
+    if (window.innerWidth <= 768) {
+        _applyZoomMobile(zoom);
+    } else {
+        const center = canvas.getCenter();
+        canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom);
+        canvas.renderAll();
+    }
 }
 
 function resetView() {
