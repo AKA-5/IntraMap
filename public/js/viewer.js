@@ -87,12 +87,14 @@ function initializeCanvas() {
         dragStartTarget = opt.target;
         
         // Enable panning if clicking on empty space (no target)
+        // This creates "hold to pan" behavior like Google Maps
         if (!opt.target) {
             isPanning = true;
             canvas.selection = false;
             lastPosX = evt.clientX;
             lastPosY = evt.clientY;
             canvas.defaultCursor = 'grabbing';
+            canvas.hoverCursor = 'grabbing';
             canvas.renderAll();
         }
     });
@@ -147,6 +149,7 @@ function initializeCanvas() {
             isPanning = false;
             canvas.selection = false;
             canvas.defaultCursor = 'grab';
+            canvas.hoverCursor = 'grab';
             canvas.renderAll();
         }
         dragStartTarget = null;
@@ -158,6 +161,7 @@ function initializeCanvas() {
             isPanning = false;
             canvas.selection = false;
             canvas.defaultCursor = 'grab';
+            canvas.hoverCursor = 'grab';
             canvas.renderAll();
         }
     });
@@ -369,7 +373,7 @@ function fitCanvasToContent() {
     });
 
     // Calculate content dimensions with padding
-    const padding = 50; // Padding around content
+    const padding = 80; // Larger padding for better initial view
     const contentWidth = (maxX - minX) + (padding * 2);
     const contentHeight = (maxY - minY) + (padding * 2);
 
@@ -437,27 +441,28 @@ function resizeCanvas() {
     // Detect mobile device
     const isMobile = window.innerWidth <= 768;
 
-    // Calculate scale to fit container
+    // Calculate scale to fit container - prioritize showing full content
     let scale;
     if (isMobile) {
         // On mobile: fit to width with margin for better visibility
         // Padding: 40px top/bottom, 20px left/right
         scale = Math.min(
-            (containerWidth - 40) / baseWidth,  // Account for wrapper padding (20px left + 20px right = 40)
-            (containerHeight - 80) / baseHeight  // Account for wrapper padding (40px top + 40px bottom = 80)
+            (containerWidth - 40) / baseWidth,  // Account for wrapper padding
+            (containerHeight - 80) / baseHeight
         );
-        // Ensure reasonable minimum scale on mobile for readability
-        scale = Math.max(scale, 0.5);
-        // But also allow larger scale for better screen utilization
-        scale = Math.min(scale, 2.0);  // Allow up to 2x zoom
+        // More lenient minimum scale to show larger maps
+        scale = Math.max(scale, 0.2);
+        // Allow up to 2x zoom
+        scale = Math.min(scale, 2.0);
     } else {
-        // On desktop: fit with space for padding (60px all sides = 120px total)
+        // On desktop: fit with generous padding for clean initial view
         scale = Math.min(
             (containerWidth - 120) / baseWidth,
             (containerHeight - 120) / baseHeight
         );
-        // Keep it reasonable
-        scale = Math.max(scale, 0.3);
+        // More lenient minimum to ensure full map is visible
+        scale = Math.max(scale, 0.2);
+        // Allow up to 1.5x zoom for close-up detail
         scale = Math.min(scale, 1.5);
     }
 
