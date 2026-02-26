@@ -51,9 +51,11 @@ function initializeCanvas() {
         clickStartTarget = opt.target;
         dragStartTarget = opt.target;
         
-        // Enable panning if clicking on empty space (no target)
-        // This creates "hold to pan" behavior like Google Maps
-        if (!opt.target) {
+        // Enable panning in these cases:
+        // 1. Clicking on empty space (no target)
+        // 2. Shift+Click anywhere (even on objects) - for easy panning
+        // 3. Right-click drag (for desktop users)
+        if (!opt.target || evt.shiftKey || evt.button === 2) {
             isPanning = true;
             canvas.selection = false;
             lastPosX = evt.clientX;
@@ -61,6 +63,11 @@ function initializeCanvas() {
             canvas.defaultCursor = 'grabbing';
             canvas.hoverCursor = 'grabbing';
             canvas.renderAll();
+            
+            // Prevent context menu on right-click
+            if (evt.button === 2) {
+                evt.preventDefault();
+            }
         }
     });
 
@@ -165,6 +172,12 @@ function initializeCanvas() {
             canvas.renderAll();
         }
     });
+    
+    // Prevent context menu on canvas (since we use right-click for panning)
+    canvas.upperCanvasEl.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
 
     // Mouse wheel: Ctrl = Zoom, Shift = Horizontal scroll, Default = Vertical/Horizontal scroll
     canvas.on('mouse:wheel', function(opt) {
@@ -210,11 +223,13 @@ function initializeCanvas() {
     let touchStartPos = null;
     let touchLastPos = null;
     let touchMoveDistance = 0;
+    let touchLongPressTimer = null;
+    let touchLongPressActivated = false;
     
     // Use wrapper for better touch capture
     const touchTarget = canvas.upperCanvasEl;
     
-    // Track touch start for single-finger panning
+    // Track touch start for single-finger panning with LONG PRESS
     touchTarget.addEventListener('touchstart', function(e) {
         if (e.touches && e.touches.length === 1) {
             touchStartPos = {
@@ -227,28 +242,51 @@ function initializeCanvas() {
             };
             isTouchPanning = false;
             touchMoveDistance = 0;
+            touchLongPressActivated = false;
+            
+            // Start long press timer (300ms hold to activate panning)
+            touchLongPressTimer = setTimeout(() => {
+                touchLongPressActivated = true;
+                // Optional: Provide haptic feedback if supported
+                if (navigator.vibrate) {
+                    navigator.vibrate(50); // Short vibration to indicate pan mode
+                }
+            }, 300); // 300ms hold time
         } else {
             // Multi-touch - reset single-finger tracking
+            if (touchLongPressTimer) {
+                clearTimeout(touchLongPressTimer);
+                touchLongPressTimer = null;
+            }
             touchStartPos = null;
             touchLastPos = null;
             isTouchPanning = false;
+            touchLongPressActivated = false;
         }
     }, { passive: true });
     
-    // Native touchmove for smooth real-time panning
+    // Native touchmove for smooth real-time panning (after long press)
     touchTarget.addEventListener('touchmove', function(e) {
         if (e.touches && e.touches.length === 1 && touchStartPos && touchLastPos) {
             const currentX = e.touches[0].clientX;
             const currentY = e.touches[0].clientY;
             
-            // Calculate total distance from start (for click detection)
+            // Calculate total distance from start
             touchMoveDistance = Math.sqrt(
                 Math.pow(currentX - touchStartPos.x, 2) +
                 Math.pow(currentY - touchStartPos.y, 2)
             );
             
-            // Start panning after small movement (3px for very responsive feel)
-            if (touchMoveDistance > 3) {
+            // If user moves before long press activates, cancel the timer (it's a swipe/tap)
+            if (!touchLongPressActivated && touchMoveDistance > 10) {
+                if (touchLongPressTimer) {
+                    clearTimeout(touchLongPressTimer);
+                    touchLongPressTimer = null;
+                }
+            }
+            
+            // Only allow panning AFTER long press is activated
+            if (touchLongPressActivated && touchMoveDistance > 5) {
                 isTouchPanning = true;
             }
             
@@ -350,7 +388,38 @@ function initializeCanvas() {
     });
     
     // Reset touch tracking when gesture ends
-    touchTarget.addEventListener('touchend', function() {
+    touchTarget.addEventListener('touchend', function(e) {
+        // Clear long press timer if still active
+        if (touchLongPressTimer) {
+            clearTimeout(touchLongPressTimer);
+            touchLongPressTimer = null;
+        }
+        
+        // Handle touch end - check if it was a tap (not a pan)
+        // Only show popup if: 1) No long press activated, 2) Minimal movement
+        if (touchStartPos && touchMoveDistance < 10 && !touchLongPressActivated) {
+            // This was a quick tap - show popup!
+            const touch = e.changedTouches[0];
+            const canvasRect = canvas.upperCanvasEl.getBoundingClientRect();
+            
+            // Convert to canvas coordinates
+            const pointer = canvas.getPointer({ clientX: touch.clientX, clientY: touch.clientY }, true);
+            const objects = canvas.getObjects();
+            
+            // Find object at tap position
+            for (let i = objects.length - 1; i >= 0; i--) {
+                const obj = objects[i];
+                if (obj.containsPoint(pointer) && obj.objectLabel) {
+                    // Small delay to ensure touch events complete
+                    setTimeout(() => {
+                        showObjectDetails(obj);
+                    }, 50);
+                    break;
+                }
+            }
+        }
+        
+        // Reset all touch state
         touchStartDistance = 0;
         touchStartZoom = 1;
         touchStartCenter = null;
@@ -358,6 +427,7 @@ function initializeCanvas() {
         touchLastPos = null;
         isTouchPanning = false;
         touchMoveDistance = 0;
+        touchLongPressActivated = false;
     });
 
     // Responsive canvas sizing
@@ -970,43 +1040,54 @@ function showObjectDetails(obj) {
 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
+    
+    // Check if mobile device
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+        // Mobile: Use bottom sheet style (handled by CSS)
+        popup.style.removeProperty('left');
+        popup.style.removeProperty('top');
+        popup.style.opacity = '1';
+        popup.classList.add('visible');
+    } else {
+        // Desktop: Smart positioning around object
+        // Make visible but transparent to measure dimensions
+        popup.style.opacity = '0';
+        popup.classList.add('visible');
 
-    // Make visible but transparent to measure dimensions
-    popup.style.opacity = '0';
-    popup.classList.add('visible');
+        const popupWidth = popup.offsetWidth || 320;
+        const popupHeight = popup.offsetHeight || 200;
 
-    const popupWidth = popup.offsetWidth || 300;
-    const popupHeight = popup.offsetHeight || 200;
+        // Default: Position to the right of object
+        let left = objViewportX + 20;
+        let top = objViewportY - popupHeight / 2;
 
-    // Restore opacity
-    popup.style.opacity = '1';
-
-    let left = objViewportX + 20; // Default to right of object
-    let top = objViewportY - popupHeight / 2; // Default to vertically centered
-
-    // STRATEGY: If object is in bottom half of screen, position popup ABOVE it
-    if (objViewportY > viewportHeight * 0.6) {
-        top = objViewportY - (obj.height * zoom / 2) - popupHeight - 10;
-        left = objViewportX - (popupWidth / 2);
-    }
-    // Otherwise position to the RIGHT (or LEFT if no space)
-    else {
-        // Check right edge
+        // Adjust if popup goes off right edge
         if (left + popupWidth > viewportWidth - 20) {
-            left = objViewportX - popupWidth - 20; // Flip to left
+            left = objViewportX - popupWidth - 20; // Position to the left instead
         }
+
+        // Adjust if popup goes off left edge
+        if (left < 20) {
+            left = 20;
+        }
+
+        // Adjust if popup goes off top
+        if (top < 20) {
+            top = 20;
+        }
+
+        // Adjust if popup goes off bottom
+        if (top + popupHeight > viewportHeight - 20) {
+            top = viewportHeight - popupHeight - 20;
+        }
+
+        popup.style.left = `${left}px`;
+        popup.style.top = `${top}px`;
+        popup.style.opacity = '1';
     }
 
-    // Final Clamp to Viewport to ensure NO CUTOFF
-    if (left < 10) left = 10;
-    if (left + popupWidth > viewportWidth - 10) left = viewportWidth - popupWidth - 10;
-
-    if (top < 10) top = 10;
-    if (top + popupHeight > viewportHeight - 10) top = viewportHeight - popupHeight - 10;
-
-    popup.style.left = `${left}px`;
-    popup.style.top = `${top}px`;
-    popup.classList.add('visible');
 
     selectedObject = obj;
 }

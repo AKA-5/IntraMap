@@ -242,14 +242,15 @@ body {
 /* Controls */
 /* Controls - Always visible and prominent on all devices */
 .viewer-controls {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
+    position: fixed !important;  /* Force fixed positioning */
+    bottom: 20px !important;
+    right: 20px !important;
     display: flex !important;  /* Force display */
     flex-direction: column;
     gap: 12px;
-    z-index: 9999;  /* Ensure above everything */
-    pointer-events: auto;  /* Ensure clickable */
+    z-index: 99999 !important;  /* Ensure above EVERYTHING */
+    pointer-events: auto !important;  /* Ensure clickable */
+    visibility: visible !important;  /* Force visibility */
 }
 
 .control-group {
