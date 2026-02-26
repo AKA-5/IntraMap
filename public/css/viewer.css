@@ -220,6 +220,7 @@ body {
     padding: 60px;  /* Padding around canvas for visual space */
     box-sizing: border-box;
     position: relative;
+    touch-action: none;  /* Ensure no browser touch gestures interfere */
 }
 
 .viewer-canvas-wrapper:active {
@@ -239,23 +240,40 @@ body {
 }
 
 /* Controls */
+/* Controls - Always visible and consistent on all devices */
 .viewer-controls {
-    position: absolute;
+    position: fixed;
     bottom: var(--spacing-lg);
     right: var(--spacing-lg);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    z-index: 1000;
 }
 
 .control-group {
-    background: white;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
     padding: var(--spacing-sm);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+    backdrop-filter: blur(10px);
+}
+
+.control-group .btn-icon {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.control-group .btn-icon:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
 }
 
 @keyframes pulse {
@@ -742,6 +760,7 @@ body {
         padding: 40px 20px;  /* Padding for visual space */
         box-sizing: border-box;
         position: relative;
+        touch-action: none;  /* Prevent browser gestures, allow custom touch handling */
     }
     
     #viewerCanvas {
@@ -754,6 +773,7 @@ body {
     }
 
     /* Controls - Compact, Fixed at Bottom */
+    /* Controls - Mobile optimized, horizontal layout */
     .viewer-controls {
         position: fixed;
         bottom: 10px;
@@ -763,23 +783,19 @@ body {
         gap: 8px;
         flex-wrap: nowrap;  /* Single row */
         z-index: 1000;
-        background: rgba(255, 255, 255, 0.98);
-        padding: 10px;
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-xl);
-        justify-content: space-between;
     }
 
     .control-group {
-        flex: 0 0 auto;  /* Don't grow */
+        flex: 1;
         flex-direction: row;
         justify-content: center;
         align-items: center;
         gap: 4px;  /* Tight spacing */
-        padding: 0;
+        padding: 8px;
         min-width: 0;
-        background: transparent;
-        box-shadow: none;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: var(--shadow-xl);
+        border-radius: var(--radius-lg);
     }
     
     /* Zoom controls - extra compact */

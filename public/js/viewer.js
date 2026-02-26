@@ -208,19 +208,98 @@ function initializeCanvas() {
     let touchStartZoom = 1;
     let touchStartCenter = null;
     let touchStartPos = null;
+    let touchLastPos = null;
     let touchMoveDistance = 0;
     
-    // Track touch start
+    // Track touch start for single-finger panning
     canvas.upperCanvasEl.addEventListener('touchstart', function(e) {
         if (e.touches && e.touches.length === 1) {
             touchStartPos = {
                 x: e.touches[0].clientX,
                 y: e.touches[0].clientY
             };
+            touchLastPos = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY
+            };
             isTouchPanning = false;
             touchMoveDistance = 0;
+        } else {
+            // Multi-touch - reset single-finger tracking
+            touchStartPos = null;
+            touchLastPos = null;
+            isTouchPanning = false;
         }
     }, { passive: true });
+    
+    // Native touchmove for smooth real-time panning
+    canvas.upperCanvasEl.addEventListener('touchmove', function(e) {
+        if (e.touches && e.touches.length === 1 && touchStartPos && touchLastPos) {
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            
+            // Calculate total distance from start (for click detection)
+            touchMoveDistance = Math.sqrt(
+                Math.pow(currentX - touchStartPos.x, 2) +
+                Math.pow(currentY - touchStartPos.y, 2)
+            );
+            
+            // Start panning after small movement (5px for responsive feel)
+            if (touchMoveDistance > 5) {
+                isTouchPanning = true;
+            }
+            
+            // Apply pan movement in real-time (Google Maps style)
+            if (isTouchPanning) {
+                // Calculate delta from last position
+                const deltaX = currentX - touchLastPos.x;
+                const deltaY = currentY - touchLastPos.y;
+                
+                const vpt = canvas.viewportTransform;
+                vpt[4] += deltaX;
+                vpt[5] += deltaY;
+                
+                // Apply constraints
+                const zoom = canvas.getZoom();
+                const canvasWidth = canvas.getWidth();
+                const canvasHeight = canvas.getHeight();
+                const containerWidth = document.querySelector('.viewer-canvas-wrapper').clientWidth;
+                const containerHeight = document.querySelector('.viewer-canvas-wrapper').clientHeight;
+                
+                const scaledWidth = canvasWidth * zoom;
+                const scaledHeight = canvasHeight * zoom;
+                const padding = 100;
+                
+                // Apply constraints
+                if (scaledWidth <= containerWidth) {
+                    vpt[4] = (containerWidth - canvasWidth) / 2;
+                } else {
+                    const maxPanX = padding;
+                    const minPanX = containerWidth - scaledWidth - padding;
+                    vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
+                }
+                
+                if (scaledHeight <= containerHeight) {
+                    vpt[5] = (containerHeight - canvasHeight) / 2;
+                } else {
+                    const maxPanY = padding;
+                    const minPanY = containerHeight - scaledHeight - padding;
+                    vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+                }
+                
+                canvas.requestRenderAll();
+                
+                // Prevent page scroll while panning
+                e.preventDefault();
+            }
+            
+            // Update last position for next frame
+            touchLastPos = {
+                x: currentX,
+                y: currentY
+            };
+        }
+    }, { passive: false }); // passive: false allows preventDefault()
     
     canvas.on('touch:gesture', function(e) {
         if (e.e.touches && e.e.touches.length === 2) {
@@ -262,71 +341,8 @@ function initializeCanvas() {
     });
     
     canvas.on('touch:drag', function(e) {
-        // Enable panning with single finger drag on empty space (like Google Maps)
-        if (e.e.touches && e.e.touches.length === 1) {
-            // Calculate distance moved from start
-            if (touchStartPos) {
-                const currentX = e.e.touches[0].clientX;
-                const currentY = e.e.touches[0].clientY;
-                touchMoveDistance = Math.sqrt(
-                    Math.pow(currentX - touchStartPos.x, 2) +
-                    Math.pow(currentY - touchStartPos.y, 2)
-                );
-                
-                // Only start panning if moved more than 10 pixels (prevents accidental panning during taps)
-                if (touchMoveDistance > 10) {
-                    isTouchPanning = true;
-                }
-            }
-            
-            // Only apply pan if we've determined this is a pan gesture, not a tap
-            if (isTouchPanning) {
-                const vpt = canvas.viewportTransform;
-                const deltaX = e.self.x - e.self.lastX;
-                const deltaY = e.self.y - e.self.lastY;
-                
-                vpt[4] += deltaX;
-                vpt[5] += deltaY;
-                
-                // Apply constraints to keep canvas centered and prevent it from sliding away
-                const zoom = canvas.getZoom();
-                const canvasWidth = canvas.getWidth();
-                const canvasHeight = canvas.getHeight();
-                const containerWidth = document.querySelector('.viewer-canvas-wrapper').clientWidth;
-                const containerHeight = document.querySelector('.viewer-canvas-wrapper').clientHeight;
-                
-                // Calculate scaled canvas dimensions
-                const scaledWidth = canvasWidth * zoom;
-                const scaledHeight = canvasHeight * zoom;
-                
-                // Apply same constraints as mouse panning
-                const padding = 100;
-                
-                // If canvas is smaller than container, keep it centered (no panning needed)
-                if (scaledWidth <= containerWidth) {
-                    vpt[4] = (containerWidth - canvasWidth) / 2;
-                } else {
-                    // If canvas is larger, allow limited overscroll
-                    const maxPanX = padding;
-                    const minPanX = containerWidth - scaledWidth - padding;
-                    vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
-                }
-                
-                if (scaledHeight <= containerHeight) {
-                    vpt[5] = (containerHeight - canvasHeight) / 2;
-                } else {
-                    // If canvas is larger, allow limited overscroll
-                    const maxPanY = padding;
-                    const minPanY = containerHeight - scaledHeight - padding;
-                    vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
-                }
-                
-                canvas.requestRenderAll();
-                
-                // Prevent default touch behavior if we're panning
-                e.e.preventDefault();
-            }
-        }
+        // Touch dragging now handled by native touchmove event for better performance
+        // This handler kept for compatibility but native events take priority
     });
     
     // Reset touch tracking when gesture ends
@@ -335,6 +351,7 @@ function initializeCanvas() {
         touchStartZoom = 1;
         touchStartCenter = null;
         touchStartPos = null;
+        touchLastPos = null;
         isTouchPanning = false;
         touchMoveDistance = 0;
     });
