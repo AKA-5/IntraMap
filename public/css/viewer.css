@@ -210,11 +210,11 @@ body {
 .viewer-canvas-container {
     flex: 1;
     position: relative;
-    overflow: hidden;  /* Hide overflow, canvas handles all interactions */
-    background: white;
-    -webkit-overflow-scrolling: touch;
-    touch-action: none;  /* Let canvas handle all touch events */
-    overscroll-behavior: contain;  /* Prevent pull-to-refresh */
+    overflow: hidden;
+    background: #f5f5f5;
+    touch-action: none;  /* We handle all touch here in JS */
+    overscroll-behavior: contain;
+    min-height: 0;  /* Critical: allows flex child to shrink */
 }
 
 .viewer-canvas-wrapper {
@@ -224,11 +224,12 @@ body {
     align-items: center;
     justify-content: center;
     cursor: grab;
-    padding: 40px 20px;  /* Consistent padding for all devices */
+    padding: 20px;  /* Compact padding */
     box-sizing: border-box;
     position: relative;
-    touch-action: none;  /* Ensure no browser touch gestures interfere */
+    touch-action: none;
     z-index: 1;
+    min-height: 0;
 }
 
 .viewer-canvas-wrapper:active {
@@ -239,12 +240,10 @@ body {
     display: block;
     max-width: 100%;
     max-height: 100%;
-    box-shadow: var(--shadow-xl);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
     background: white;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
     cursor: grab;
-    pointer-events: auto;  /* Canvas captures all interactions */
+    pointer-events: auto;
     user-select: none;
     -webkit-user-select: none;
 }
@@ -500,21 +499,17 @@ body {
 /* Object Info Popup */
 .object-popup {
     position: fixed;
-    /* Changed from absolute to fixed for better positioning */
     background: white;
     border-radius: var(--radius-lg);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    padding: var(--spacing-lg);
-    min-width: 320px;
-    max-width: min(500px, 90vw);  /* Responsive to screen width */
-    max-height: 80vh;
-    /* Limit height to 80% of viewport */
-    overflow-y: auto;
-    /* Make scrollable if content exceeds max-height */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    min-width: 260px;
+    max-width: min(380px, calc(100vw - 32px));
     z-index: 300;
-    animation: popupSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: none;
     border: 1px solid var(--gray-200);
+    overflow: hidden;
+    animation: popupSlideIn 0.2s ease;
 }
 
 .object-popup.visible {
@@ -522,60 +517,68 @@ body {
 }
 
 @keyframes popupSlideIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .popup-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--spacing-md);
+    padding: 12px 12px 10px 16px;
+    border-bottom: 1px solid var(--gray-100);
+    gap: 8px;
 }
 
 .popup-title {
     flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .popup-title h3 {
-    margin: 0 0 4px 0;
+    margin: 0;
     color: var(--gray-900);
-    font-size: 1.25rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* Close button - always large, always visible */
 .popup-close {
-    background: none;
+    flex-shrink: 0;
+    background: var(--gray-100);
     border: none;
-    font-size: 24px;
-    color: var(--gray-400);
+    font-size: 18px;
+    color: var(--gray-600);
     cursor: pointer;
-    padding: 0;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
+    line-height: 1;
+    transition: all 0.15s;
+    font-weight: 700;
 }
 
-.popup-close:hover {
-    background: var(--gray-100);
-    color: var(--gray-700);
+.popup-close:hover, .popup-close:active {
+    background: var(--gray-200);
+    color: var(--gray-900);
 }
 
 .popup-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-xs);
-    margin-bottom: var(--spacing-md);
+    gap: 6px;
+    padding: 10px 16px 12px;
+    max-height: 80px;
+    overflow-y: auto;
 }
 
 .popup-actions {
@@ -726,9 +729,9 @@ body {
         font-size: 14px;
     }
 
-    /* Canvas wrapper - optimized padding for mobile */
+    /* Canvas wrapper - reduce padding on mobile to maximise map area */
     .viewer-canvas-wrapper {
-        padding: 20px 10px;
+        padding: 10px;
     }
 
     /* Controls - Bottom right for easier thumb access */
@@ -748,17 +751,19 @@ body {
         min-height: 42px;
     }
 
-    /* Object Popup - Bottom Sheet Style */
+    /* Object Popup - compact card, leaves room for the right-side controls */
     .object-popup {
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
+        left: 12px !important;
+        right: 78px !important;  /* 60px controls + ~18px gap */
+        bottom: 16px !important;
         top: auto !important;
-        min-width: auto;
+        min-width: 0;
         max-width: none;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        max-height: 50vh;
-        overflow-y: auto;
+        border-radius: 14px;
+    }
+
+    .popup-tags {
+        max-height: 56px;
     }
 
     /* Help Popup - Full width on mobile */

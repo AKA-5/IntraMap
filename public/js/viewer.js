@@ -186,193 +186,130 @@ function initializeCanvas() {
         evt.stopPropagation();
     });
 
-    // Touch gesture support for mobile - SIMPLIFIED AND IMPROVED
+    // ----------------------------------------------------------------
+    // TOUCH HANDLING - attached to the CONTAINER div (not canvas.upperCanvasEl)
+    // This avoids conflicts with Fabric.js which owns the canvas elements.
+    // ----------------------------------------------------------------
     let touchStartDistance = 0;
     let touchStartZoom = 1;
     let touchStartCenter = null;
     let touchStartPos = null;
     let touchLastPos = null;
     let touchMoved = false;
-    let touchTarget = null;
-    
-    // Use canvas element for touch capture
-    const canvasTouchElement = canvas.upperCanvasEl;
-    
-    // Track touch start for single-finger interaction
-    canvasTouchElement.addEventListener('touchstart', function(e) {
-        if (e.touches && e.touches.length === 1) {
-            const touch = e.touches[0];
-            touchStartPos = {
-                x: touch.clientX,
-                y: touch.clientY
-            };
-            touchLastPos = {
-                x: touch.clientX,
-                y: touch.clientY
-            };
-            touchMoved = false;
-            
-            // Check if touch is on an object
-            const pointer = canvas.getPointer(touch, true);
-            const objects = canvas.getObjects();
-            touchTarget = null;
-            
-            for (let i = objects.length - 1; i >= 0; i--) {
-                const obj = objects[i];
-                if (obj.containsPoint(pointer) && obj.objectLabel) {
-                    touchTarget = obj;
-                    break;
-                }
-            }
-        } else if (e.touches && e.touches.length === 2) {
-            // Two finger pinch - reset single touch state
-            touchStartPos = null;
-            touchLastPos = null;
-            touchMoved = false;
-            touchTarget = null;
-        }
-    }, { passive: true });
-    
-    // Native touchmove for smooth real-time panning - INSTANT, NO DELAY
-    canvasTouchElement.addEventListener('touchmove', function(e) {
-        if (e.touches && e.touches.length === 1 && touchStartPos && touchLastPos) {
-            const touch = e.touches[0];
-            const currentX = touch.clientX;
-            const currentY = touch.clientY;
-            
-            // Calculate movement distance from start
-            const totalDistance = Math.sqrt(
-                Math.pow(currentX - touchStartPos.x, 2) +
-                Math.pow(currentY - touchStartPos.y, 2)
-            );
-            
-            // If movement exceeds threshold (10px), it's a drag not a tap
-            if (totalDistance > 10) {
-                touchMoved = true;
-                
-                // Calculate delta from last position
-                const deltaX = currentX - touchLastPos.x;
-                const deltaY = currentY - touchLastPos.y;
-                
-                // Apply pan movement immediately (Google Maps style)
-                panCanvas(deltaX, deltaY);
-                
-                // Update last position for next frame
-                touchLastPos = {
-                    x: currentX,
-                    y: currentY
-                };
-                
-                // Prevent page scroll while panning - critical for mobile!
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        }
-    }, { passive: false }); // passive: false allows preventDefault()
-    
-    canvas.on('touch:gesture', function(e) {
-        if (e.e.touches && e.e.touches.length === 2) {
-            // Pinch zoom
-            const point1 = { x: e.e.touches[0].clientX, y: e.e.touches[0].clientY };
-            const point2 = { x: e.e.touches[1].clientX, y: e.e.touches[1].clientY };
-            
-            const currentDistance = Math.sqrt(
-                Math.pow(point2.x - point1.x, 2) + 
-                Math.pow(point2.y - point1.y, 2)
-            );
-            
-            if (touchStartDistance === 0) {
-                touchStartDistance = currentDistance;
-                touchStartZoom = canvas.getZoom();
-                touchStartCenter = {
-                    x: (point1.x + point2.x) / 2,
-                    y: (point1.y + point2.y) / 2
-                };
-            }
-            
-            const scale = currentDistance / touchStartDistance;
-            let newZoom = touchStartZoom * scale;
-            
-            // Limit zoom
-            if (newZoom > 4) newZoom = 4;
-            if (newZoom < 0.3) newZoom = 0.3;
-            
-            if (touchStartCenter) {
-                canvas.zoomToPoint(
-                    new fabric.Point(touchStartCenter.x, touchStartCenter.y),
-                    newZoom
-                );
-            }
-            
-            e.e.preventDefault();
-            e.e.stopPropagation();
-        }
-    });
+    let touchTapTarget = null;
 
     // Centralized pan function with constraints
     function panCanvas(deltaX, deltaY) {
         const vpt = canvas.viewportTransform;
         vpt[4] += deltaX;
         vpt[5] += deltaY;
-        
-        // Apply pan constraints to prevent excessive white space
+
         const zoom = canvas.getZoom();
         const canvasWidth = canvas.getWidth();
         const canvasHeight = canvas.getHeight();
         const wrapper = document.querySelector('.viewer-canvas-wrapper');
         const containerWidth = wrapper ? wrapper.clientWidth : window.innerWidth;
         const containerHeight = wrapper ? wrapper.clientHeight : window.innerHeight;
-        
-        // Allow small overscroll (100px) but keep content mostly visible
-        const padding = 100;
+        const padding = 80;
         const scaledWidth = canvasWidth * zoom;
         const scaledHeight = canvasHeight * zoom;
-        
-        // If canvas smaller than container, keep centered
+
         if (scaledWidth <= containerWidth) {
             vpt[4] = (containerWidth - canvasWidth) / 2;
         } else {
-            // Allow limited overscroll
-            const maxPanX = padding;
-            const minPanX = containerWidth - scaledWidth - padding;
-            vpt[4] = Math.min(maxPanX, Math.max(minPanX, vpt[4]));
+            vpt[4] = Math.min(padding, Math.max(containerWidth - scaledWidth - padding, vpt[4]));
         }
-        
         if (scaledHeight <= containerHeight) {
             vpt[5] = (containerHeight - canvasHeight) / 2;
         } else {
-            const maxPanY = padding;
-            const minPanY = containerHeight - scaledHeight - padding;
-            vpt[5] = Math.min(maxPanY, Math.max(minPanY, vpt[5]));
+            vpt[5] = Math.min(padding, Math.max(containerHeight - scaledHeight - padding, vpt[5]));
         }
-        
         canvas.requestRenderAll();
     }
-    
-    canvas.on('touch:drag', function(e) {
-        // Touch dragging now handled by native touchmove event for better performance
-        // This handler kept for compatibility but native events take priority
-    });
-    
-    // Reset touch tracking when gesture ends
-    canvasTouchElement.addEventListener('touchend', function(e) {
-        // Handle touch end - check if it was a tap (not a drag)
-        if (touchStartPos && !touchMoved && touchTarget) {
-            // This was a quick tap on an object - show popup!
-            setTimeout(() => {
-                showObjectDetails(touchTarget);
-            }, 10);
+
+    // Attach to the container div - sits ABOVE Fabric's canvas elements in the DOM
+    const touchContainer = document.querySelector('.viewer-canvas-container');
+
+    touchContainer.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) {
+            const t = e.touches[0];
+            touchStartPos = { x: t.clientX, y: t.clientY };
+            touchLastPos  = { x: t.clientX, y: t.clientY };
+            touchMoved = false;
+
+            // Find tappable object at touch point (canvas-space coords)
+            const canvasRect = canvas.upperCanvasEl.getBoundingClientRect();
+            const zoom = canvas.getZoom();
+            const vpt  = canvas.viewportTransform;
+            // Convert client coords → canvas object-space
+            const cx = (t.clientX - canvasRect.left - vpt[4]) / zoom;
+            const cy = (t.clientY - canvasRect.top  - vpt[5]) / zoom;
+            const pt = new fabric.Point(cx, cy);
+
+            touchTapTarget = null;
+            const objects = canvas.getObjects();
+            for (let i = objects.length - 1; i >= 0; i--) {
+                const obj = objects[i];
+                if (obj.objectLabel && obj.containsPoint(pt)) {
+                    touchTapTarget = obj;
+                    break;
+                }
+            }
+
+            // Reset pinch state
+            touchStartDistance = 0;
+            touchStartZoom = 1;
+            touchStartCenter = null;
+        } else if (e.touches.length === 2) {
+            // Two-finger: prepare pinch zoom
+            touchStartPos = null; // cancel any single-touch tracking
+            const t1 = e.touches[0], t2 = e.touches[1];
+            touchStartDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            touchStartZoom = canvas.getZoom();
+            touchStartCenter = {
+                x: (t1.clientX + t2.clientX) / 2,
+                y: (t1.clientY + t2.clientY) / 2
+            };
         }
-        
-        // Reset all touch state
-        touchStartDistance = 0;
-        touchStartZoom = 1;
-        touchStartCenter = null;
+    }, { capture: true, passive: true });
+
+    touchContainer.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 1 && touchStartPos) {
+            const t = e.touches[0];
+            const dx = t.clientX - touchLastPos.x;
+            const dy = t.clientY - touchLastPos.y;
+            const totalDist = Math.hypot(t.clientX - touchStartPos.x, t.clientY - touchStartPos.y);
+
+            if (totalDist > 8 || touchMoved) {
+                touchMoved = true;
+                panCanvas(dx, dy);
+            }
+
+            // Always update lastPos so delta stays frame-accurate
+            touchLastPos = { x: t.clientX, y: t.clientY };
+            e.preventDefault(); // stop browser scroll
+
+        } else if (e.touches.length === 2 && touchStartDistance > 0) {
+            const t1 = e.touches[0], t2 = e.touches[1];
+            const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            let newZoom = touchStartZoom * (dist / touchStartDistance);
+            newZoom = Math.max(0.3, Math.min(4, newZoom));
+            canvas.zoomToPoint(new fabric.Point(touchStartCenter.x, touchStartCenter.y), newZoom);
+            e.preventDefault();
+        }
+    }, { capture: true, passive: false });
+
+    touchContainer.addEventListener('touchend', function(e) {
+        if (!touchMoved && touchTapTarget) {
+            showObjectDetails(touchTapTarget);
+        }
+        // Reset
         touchStartPos = null;
-        touchLastPos = null;
-        touchMoved = false;
-        touchTarget = null;
-    });
+        touchLastPos  = null;
+        touchMoved    = false;
+        touchTapTarget = null;
+        touchStartDistance = 0;
+    }, { capture: true, passive: true });
 
     // Responsive canvas sizing
     resizeCanvas();
@@ -466,47 +403,29 @@ function centerCanvas() {
 // Resize canvas to fit container while maintaining content aspect ratio
 function resizeCanvas() {
     const container = document.querySelector('.viewer-canvas-wrapper');
-    const containerWidth = container.clientWidth;
+    if (!container) return;
+    const containerWidth  = container.clientWidth;
     const containerHeight = container.clientHeight;
 
-    // Use base dimensions if set, otherwise default
-    const baseWidth = canvas.baseWidth || 600;
+    const baseWidth  = canvas.baseWidth  || 600;
     const baseHeight = canvas.baseHeight || 600;
 
-    // Detect mobile device
     const isMobile = window.innerWidth <= 768;
+    // Padding is 10px on mobile, 20px on desktop (set in CSS)
+    const pad = isMobile ? 10 : 20;
 
-    // Calculate scale to fit container - prioritize showing full content
-    let scale;
-    if (isMobile) {
-        // On mobile: fit to width with margin for better visibility
-        // Padding: 40px top/bottom, 20px left/right
-        scale = Math.min(
-            (containerWidth - 40) / baseWidth,  // Account for wrapper padding
-            (containerHeight - 80) / baseHeight
-        );
-        // More lenient minimum scale to show larger maps
-        scale = Math.max(scale, 0.2);
-        // Allow up to 2x zoom
-        scale = Math.min(scale, 2.0);
-    } else {
-        // On desktop: fit with generous padding for clean initial view
-        scale = Math.min(
-            (containerWidth - 120) / baseWidth,
-            (containerHeight - 120) / baseHeight
-        );
-        // More lenient minimum to ensure full map is visible
-        scale = Math.max(scale, 0.2);
-        // Allow up to 1.5x zoom for close-up detail
-        scale = Math.min(scale, 1.5);
-    }
+    // Scale to fill available space (subtract padding both sides)
+    let scale = Math.min(
+        (containerWidth  - pad * 2) / baseWidth,
+        (containerHeight - pad * 2) / baseHeight
+    );
+    scale = Math.max(0.15, Math.min(scale, isMobile ? 2.5 : 2.0));
 
-    canvas.setWidth(baseWidth * scale);
+    canvas.setWidth(baseWidth   * scale);
     canvas.setHeight(baseHeight * scale);
     canvas.setZoom(scale);
     canvas.renderAll();
-    
-    // Re-center canvas after resize
+
     centerCanvas();
 }
 
@@ -953,7 +872,12 @@ function clearHighlights() {
 }
 
 // Show object details popup
+let _lastPopupMs = 0;
 function showObjectDetails(obj) {
+    // Debounce: prevent double-fire from touch + synthetic mouse events on mobile
+    const now = Date.now();
+    if (now - _lastPopupMs < 400) return;
+    _lastPopupMs = now;
     const popup = document.getElementById('objectPopup');
     const label = obj.objectLabel || 'Unnamed';
     const tags = obj.objectTags || '';
@@ -977,58 +901,39 @@ function showObjectDetails(obj) {
     const canvasRect = canvas.getElement().getBoundingClientRect();
     const objCenter = obj.getCenterPoint();
     const zoom = canvas.getZoom();
+    const vpt  = canvas.viewportTransform;
 
-    // Calculate object position relative to viewport
-    const objViewportX = canvasRect.left + objCenter.x * zoom;
-    const objViewportY = canvasRect.top + objCenter.y * zoom;
-
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    // Check if mobile device
     const isMobile = window.innerWidth <= 768;
-    
+
     if (isMobile) {
-        // Mobile: Use bottom sheet style (handled by CSS)
+        // Mobile: compact card pinned to bottom-left, leaving right side free for controls
         popup.style.removeProperty('left');
         popup.style.removeProperty('top');
-        popup.style.opacity = '1';
+        popup.style.removeProperty('right');
+        popup.style.removeProperty('bottom');
         popup.classList.add('visible');
     } else {
-        // Desktop: Smart positioning around object
-        // Make visible but transparent to measure dimensions
+        // Desktop: smart positioning near the object
         popup.style.opacity = '0';
         popup.classList.add('visible');
 
-        const popupWidth = popup.offsetWidth || 320;
-        const popupHeight = popup.offsetHeight || 200;
+        const objViewportX = canvasRect.left + (objCenter.x * zoom + vpt[4]);
+        const objViewportY = canvasRect.top  + (objCenter.y * zoom + vpt[5]);
+        const viewportWidth  = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const popupWidth  = popup.offsetWidth  || 320;
+        const popupHeight = popup.offsetHeight || 120;
 
-        // Default: Position to the right of object
         let left = objViewportX + 20;
-        let top = objViewportY - popupHeight / 2;
+        let top  = objViewportY - popupHeight / 2;
 
-        // Adjust if popup goes off right edge
-        if (left + popupWidth > viewportWidth - 20) {
-            left = objViewportX - popupWidth - 20; // Position to the left instead
-        }
+        if (left + popupWidth  > viewportWidth  - 20) left = objViewportX - popupWidth - 20;
+        if (left < 20) left = 20;
+        if (top  < 20) top  = 20;
+        if (top  + popupHeight > viewportHeight - 20) top = viewportHeight - popupHeight - 20;
 
-        // Adjust if popup goes off left edge
-        if (left < 20) {
-            left = 20;
-        }
-
-        // Adjust if popup goes off top
-        if (top < 20) {
-            top = 20;
-        }
-
-        // Adjust if popup goes off bottom
-        if (top + popupHeight > viewportHeight - 20) {
-            top = viewportHeight - popupHeight - 20;
-        }
-
-        popup.style.left = `${left}px`;
-        popup.style.top = `${top}px`;
+        popup.style.left    = `${left}px`;
+        popup.style.top     = `${top}px`;
         popup.style.opacity = '1';
     }
 
