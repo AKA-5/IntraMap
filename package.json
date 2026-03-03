@@ -1,6 +1,6 @@
 {
     "name": "intramap",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "Indoor floor plan navigation system with QR code support",
     "scripts": {
         "dev": "npx http-server public -p 3000 -o",
@@ -14,7 +14,7 @@
         "qr-code",
         "maps"
     ],
-    "author": "",
+    "author": "M Kaleem Akhtar",
     "license": "MIT",
     "devDependencies": {
         "http-server": "^14.1.1"

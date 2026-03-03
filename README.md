@@ -1,608 +1,231 @@
-# 🗺️ IntraMap - Indoor Navigation Platform
+# IntraMap
 
-A modern, production-ready web application for creating and sharing interactive indoor floor plans with QR code navigation. Built on **100% free cloud services** (Cloudflare Workers + Vercel).
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](https://github.com)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://intra-map-six.vercel.app)
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Cost](https://img.shields.io/badge/cost-$0%2Fmonth-brightgreen)
-![Mobile](https://img.shields.io/badge/mobile-optimized-success)
+**IntraMap** is a web-based indoor navigation platform that lets building administrators create interactive floor plans and share them with visitors via QR code. Visitors scan the code and immediately get a searchable, zoomable map of the building on their phone — no app download required.
 
-> **✨ What's New in v2.0:** Fixed panning/dragging on all devices, enhanced zoom controls, comprehensive keyboard shortcuts, and detailed user guide!
-
----
-
-## ✨ Features
-
-### 🎨 For Building Administrators
-
-**Floor Plan Editor**
-- **Drag-and-drop interface** - Intuitive canvas-based editor powered by Fabric.js
-- **Multiple floor support** - Create unlimited floors with custom names (Ground, Basement, Mezzanine, etc.)
-- **Drawing tools** - Rectangles, circles, text labels, and wall/line tool
-- **Professional icon library** - 13 SVG icons with color-coded categories:
-  - 🍴 Restaurant/Cafe (Blue `#3B82F6`)
-  - 🚻 Restrooms (Green `#10B981`)
-  - 🚪 Exit (Red `#DC2626`)
-  - 🪜 Stairs/Elevator (Gray `#6B7280`)
-  - 🏧 ATM/Info (Yellow `#F59E0B`)
-  - 🛒 Shop/Parking (Gray `#6B7280`)
-  - 🏥 Medical/Security (Gray/Red)
-
-**Advanced Editing**
-- **Property panel** - Edit name, tags, colors, opacity, borders
-- **Multi-selection** - Select multiple objects using Shift+Click or drag selection
-- **Border customization** - Width (0-20px), style (solid/dashed/dotted)
-- **Layer controls** - Bring to front, send to back
-- **Lock objects** - Prevent accidental modifications
-- **Copy & Paste** - Duplicate objects with Ctrl+C/V
-- **Undo/Redo** - 50-step history with Ctrl+Z/Y
-- **Keyboard shortcuts** - Comprehensive shortcuts for power users
-
-**Data Management**
-- **Auto-save** - Local storage backup every 10 seconds
-- **Cloud sync** - Save to Cloudflare KV storage
-- **QR code generation** - Instant shareable links
-- **Demo data** - Load comprehensive Centaurus Shopping Mall example
-
-### 📱 For Visitorspanning** - Smooth one-finger drag navigation like Google Maps
-- **Pinch-to-zoom** - Two-finger zoom with smooth scaling
-
-**Mobile-First Design**
-- **Touch-optimized scrolling** - Smooth panning like Google Maps
-- **Responsive canvas** - Adapts to any screen size (phone, tablet, desktop)
-- **Bottom-sheet popups** - Native mobile experience
-- **Optimized layout** - Content fills screen efficiently
-
-**Navigation Features**
-- **Smart search** - Find locations by name or tags
-- **Interactive floor plans** - Click locations for details
-- **Floor switching** - Easy dropdown selector
-- **Pan & Zoom** - Mouse drag, arrow keys, zoom buttons, and keyboard shortcuts
-- **Reset view** - Quickly return to centered view
-- **Precise click detection** - Accurate selection of adjacent items
-
-**Performance**
-- **PWA support** - Installable, works offline
-- **Fast loading** - Optimized for 3G networks
-- **Smooth animations** - 60fps transitions
-- **Cached assets** - Instant repeat visits
+> Live demo: [https://intra-map-six.vercel.app](https://intra-map-six.vercel.app) — preloaded with a 3-floor shopping mall example.
 
 ---
 
-## 🚀 Quick Start
+## Problem
 
-### Prerequisites
-- Node.js 16+ (for local development)
-- Cloudflare account (free)
-- Vercel account (free) or GitHub account
+Large indoor spaces — malls, hospitals, university campuses, convention centers — consistently fail at visitor wayfinding. Commercial wayfinding systems cost $5,000–$50,000 and require proprietary hardware. Static PDF maps don't work on mobile. IntraMap solves this with a zero-cost, browser-based alternative that any building manager can set up in minutes.
 
-### 1. Clone and Install
+---
 
-```bash
-git clone <your-repo-url>
-cd IntraMap
-npm install
-```
+## How It Works
 
-### 2. Test Locally
+1. A building administrator opens the **editor** (`admin.html`) and draws their floor plan using a drag-and-drop canvas interface.
+2. They add named locations (rooms, stores, services) with icons, colors, and searchable tags across one or more floors.
+3. They save the floor plan to the cloud and generate a **QR code**.
+4. Visitors scan the QR code and land on the **viewer** (`viewer.html`) — a mobile-optimized map where they can search for locations, switch floors, and tap any location for details.
 
-```bash
-npm run dev
-```
+---
 
-Open http://localhost:3000 in your browser.
+## Features
 
-### 3. Deploy Backend (Cloudflare Worker)
+### Editor
+- Canvas-based drawing with rectangles, circles, lines, and text labels
+- 13 categorized icons (restaurant, restroom, exit, elevator, ATM, shop, medical, etc.)
+- Multi-floor support with custom floor names (Basement, Ground, Mezzanine, etc.)
+- Object property panel: name, tags, fill color, border style, opacity, lock state
+- Multi-select with Shift+Click or drag selection
+- Undo/redo with 50-step history
+- Copy and paste
+- Auto-save to localStorage every 10 seconds
+- Cloud save to Cloudflare KV with one click
+- QR code generation and download
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+### Viewer
+- Mobile-first responsive layout
+- Full pan and zoom: mouse drag, touch drag, pinch-to-zoom, keyboard arrows, mouse wheel
+- Smart search by location name or tags
+- Floor selector dropdown
+- Tap-to-detail popup with location info
+- Works offline after first visit (PWA with service worker)
+- Installable on mobile home screen
 
-Quick version:
-```bash
-# Install Wrangler CLI
-npm install -g wrangler
+### Infrastructure
+- 100% free hosting: Cloudflare Workers (API) + Vercel (frontend)
+- No server to manage; backend is a single serverless function
+- REST API with Cloudflare KV storage
 
-# Login to Cloudflare
-wrangler login
+---
 
-# Create KV namespace
-wrangler kv:namespace create BUILDINGS
+## Tech Stack
 
-# Update worker/wrangler.toml with the namespace ID
+| Layer | Technology |
+|---|---|
+| Frontend | HTML5, CSS3, Vanilla JavaScript |
+| Canvas | [Fabric.js](http://fabricjs.com/) 5.x |
+| QR Generation | [QRCode.js](https://davidshimjs.github.io/qrcodejs/) |
+| Backend | Cloudflare Workers (serverless edge) |
+| Storage | Cloudflare KV (key-value store) |
+| Hosting | Vercel (static frontend CDN) |
+| Offline | Progressive Web App (Service Worker) |
 
-# Deploy
-npm run deploy:worker
-```
+No build step, no framework, no dependencies beyond the two bundled libraries.
 
-### 4. Deploy Frontend (Vercel)
+---
 
-```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Deploy
-npm run deploy:vercel
-```
-
-Or use the Vercel dashboard to connect your GitHub repository.
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 IntraMap/
-├── public/                 # Frontend files
-│   ├── index.html         # Landing page
-│   ├── admin.html         # Floor plan editor
-│   ├── viewer.html        # Map viewer
+├── public/                 # Frontend (deployed to Vercel)
+│   ├── index.html          # Landing page
+│   ├── admin.html          # Floor plan editor
+│   ├── viewer.html         # Map viewer for visitors
 │   ├── css/
-│   │   ├── common.css     # Shared styles
-│   │   ├── admin.css      # Editor styles
-│   │   └── viewer.css     # Viewer styles
+│   │   ├── common.css      # Shared styles
+│   │   ├── admin.css       # Editor styles
+│   │   └── viewer.css      # Viewer styles
 │   ├── js/
-│   │   ├── admin.js       # Editor logic
-│   │   ├── viewer.js      # Viewer logic
-│   │   ├── api.js         # API client
-│   │   └── icons.js       # Icon library
-│   ├── lib/               # External libraries
-│   ├── manifest.json      # PWA manifest
-│   └── sw.js              # Service worker
-├── worker/                # Cloudflare Worker
-│   ├── index.js           # API endpoints
-│   └── wrangler.toml      # Worker config
-├── sample-data/           # Sample building data
-└── README.md
-```
-
-## 🎯 Usage Guide
-
-### Creating Your First Floor Plan
-
-1. **Open Admin Panel**
-   - Navigate to `admin.html`
-   - Enter building name (e.g., "Shopping Mall", "Office Building")
-
-2. **Design Floors**
-   - Start with the default "Ground Floor"
-   - Add floors using **"+ Floor"** button
-   - Right-click floor tabs to rename or delete
-   - Supported floor types: Basement, Ground, Mezzanine, Upper floors, Rooftop
-
-3. **Add Elements**
-   - **Shapes** - Draw rooms and areas (rectangles, circles)
-   - **Lines** - Create walls and boundaries (click twice)
-   - **Text** - Add labels and descriptions
-   - **Icons** - Select from 13 professional icons
-
-4. **Customize Properties**
-   - Click any object to open the properties panel
-   - Set **Name** (e.g., "Food Court")
-   - Add **Tags** (e.g., "food, restaurant, dining")
-   - Choose **Fill Color**
-   - Adjust **Border** (width, style, color)
-   - Set **Opacity** (0-100%)
-   - **Lock/Unlock** to prevent edits
-
-5. **Save & Share**
-   - Auto-saves to browser every 10 seconds
-   - Click **"Save to Cloud"** to sync
-   - Click **"Generate QR Code"** for sharing
-   - Download or display QR code for visitors
-
-### Viewing Floor Plans
-
-**Via QR Code:**
-- Scan QR code with phone camera
-- Browser opens viewer automatically
-- Navigate and search locations
-
-**Via URL:**
-- Visit `viewer.html?building=<building-id>`
-- Use search bar to find locations
-- Click locations for details
-- Switc** - Touch and drag with one finger to move around
-- **Zoom** - Pinch with two fingers or use +/- buttons
-- **Search** - Type location name or tags
-- **Details** - Tap any location to see information
-- **Responsive** - Zoom controls visible and optimized for touch
-- **Pan/Scroll** - Touch and drag anywhere on white canvas area
-- **Search** - Type location name or tags
-- **Details** - Tap any location box
-
----
-
-## 🎨 Design System
-
-### Icon Library
-
-| Icon | Category | Color | Use Case |
-|------|----------|-------|----------|
-| 🍴 Restaurant | Food | Blue `#3B82F6` | Dining areas, food courts |
-| ☕ Cafe | Food | Blue `#3B82F6` | Coffee shops, cafeterias |
-| 🚻 Restroom | Facilities | Green `#10B981` | Bathrooms, washrooms |
-| 🚪 Exit | Safety | Red `#DC2626` | Emergency exits, doors |
-| 🪜 Stairs | Navigation | Gray `#6B7280` | Staircases |
-| 🛗 Elevator | Navigation | Gray `#6B7280` | Lifts, elevators |
-| 🏧 ATM | Services | Yellow `#F59E0B` | Cash machines |
-| ℹ️ Info | Services | Yellow `#F59E0B` | Help desks, reception |
-| 🛒 Shop | Retail | Gray `#6B7280` | Stores, boutiques |
-| 🅿️ Parking | Services | Gray `#6B7280` | Parking areas |
-| 🏥 Medical | Healthcare | Red `#DC2626` | Clinics, first aid |
-| 🔒 Security | Safety | Gray `#6B7280` | Security offices |
-| ❓ Help | Services | Yellow `#F59E0B` | Information counters |
-
-### Color Palette
-
-```css
-/* Primary Colors */
---primary-blue: #3B82F6;    /* Food, navigation highlights */
---success-green: #10B981;   /* Restrooms, confirmations */
---danger-red: #DC2626;      /* Exits, emergencies, deletions */
---warning-yellow: #F59E0B;  /* Services, information */
-
-/* Neutral Colors */
---gray-900: #111827;        /* Text, headings */
---gray-700: #374151;        /* Secondary text */
---gray-500: #6B7280;        /* Icons, borders */
---gray-300: #D1D5DB;        /* Dividers */
---gray-100: #F3F4F6;        /* Backgrounds */
+│   │   ├── admin.js        # Editor logic
+│   │   ├── viewer.js       # Viewer logic (pan/zoom/search)
+│   │   ├── api.js          # API client (save/load buildings)
+│   │   └── icons.js        # SVG icon definitions
+│   ├── lib/
+│   │   ├── fabric.min.js   # Canvas library (bundled)
+│   │   └── qrcode.min.js   # QR generation (bundled)
+│   ├── data/
+│   │   └── demo-building.json  # Sample Centaurus Mall data
+│   └── manifest.json       # PWA manifest
+├── worker/
+│   ├── index.js            # Cloudflare Worker API (CRUD endpoints)
+│   └── wrangler.toml       # Worker configuration
+├── docs/
+│   ├── PRD.md              # Product requirements document
+│   └── TECHNICAL_ARCHITECTURE.md  # Architecture and data models
+├── DEPLOYMENT.md           # Step-by-step deployment guide
+├── USER_GUIDE.md           # End-user guide for editor and viewer
+└── vercel.json             # Vercel routing and headers config
 ```
 
 ---
 
-## 🔧 Technical Architecture
+## Running Locally
 
-### Frontend Stack
-- **HTML5/CSS3** - Modern semantic markup
-- **Vanilla JavaScript** - No framework dependencies
-- **Fabric.js 5.x** - Canvas manipulation and rendering
-- **QRCode.js** - QR code generation
-- **PWA** - Service worker for offline support
+**Requirements:** Node.js 16+
 
-### Backend Stack
-- **Cloudflare Workers** - Serverless edge computing
-- **Cloudflare KV** - Global key-value storage
-- **REST API** - Simple CRUD operations
-
-### Mobile Optimization
-- **Touch scrolling** - Pan and zoom like Google Maps
-- **Responsive canvas** - Adapts to screen size (320px - 2560px)
-- **Bottom sheets** - Native mobile UI patterns
-- **Viewport handling** - Dynamic viewport height (dvh) units
-- **Touch targets** - Minimum 44px for accessibility
-
-### Performance Features
-- **Lazy loading** - Load assets on demand
-- **Canvas caching** - Efficient rendering
-- **Debounced auto-save** - Prevents excessive writes
-- **Optimized images** - SVG icons for scalability
-- **Service worker** - Cache-first strategy
-
----
-
-## 🔧 Configuration
-
-### Update API Endpoint
-
-After deploying your Cloudflare Worker, update the API URL:
-
-**Option 1: In HTML files** (Recommended)
-```html
-<!-- public/admin.html, viewer.html -->
-<script>
-  window.INTRAMAP_API_URL = 'https://your-worker.workers.dev';
-</script>
+```bash
+git clone <repo-url>
+cd IntraMap
+npm install
+npm run dev
 ```
 
-**Option 2: In api.js**
-```javascript
-// public/js/api.js
-const API = new IntraMapAPI('https://your-worker.workers.dev');
+Opens at `http://localhost:3000`. The app loads demo data by default so the viewer works immediately without a backend.
+
+---
+
+## Deployment
+
+Full instructions are in [DEPLOYMENT.md](DEPLOYMENT.md). The short version:
+
+**Backend (Cloudflare Worker):**
+```bash
+npm install -g wrangler
+wrangler login
+cd worker
+wrangler kv namespace create BUILDINGS
+# Paste the namespace ID into wrangler.toml
+wrangler deploy
 ```
 
----
-
-## ⌨️ Keyboard Shortcuts
-C` | Copy selected object |
-| `Ctrl + V` | Paste copied object |
-| `Ctrl + Z` | Undo last action (50-step history) |
-| `Ctrl + Y` / `Ctrl + Shift + Z` | Redo action |
-| `Ctrl + S` | Save draft to browser |
-| `Ctrl + 0` | Fit canvas to screen |
-| `Delete` / `Backspace` | Remove selected object(s) |
-| `Escape` | Deselect object / Cancel action |
-| `Shift + Click` | Multi-select objects |
-| `Space + Drag` | Pan canvas (temporary pan mode) |
-| `Arrow Keys` | Pan canvas |
-| `+ / -` | Zoom in/out |
-
-> **💡 Pro Tip:** Hold Shift and click multiple objects to select and edit them together!
-
-### Viewer
-| Shortcut | Action |
-|----------|--------|
-| `Arrow Keys` | Pan map in any direction |
-| `+ / -` | Zoom in/out |
-| `0` | Reset view to center |
-| `Escape` | Close popup / Clear highlights |
-| `Space` | Toggle welcome overlay |
-| `Ctrl + Scroll` | Zoom to cursor position |
-| `Shift + Scroll` | Horizontal pan
-| Shortcut | Action |
-|----------|--------|
-| `Escape` | Close popup / Clear search |
-| `/` | Focus search bar |
-
----
-
-## 💰 Pricing & Limits
-
-**100% FREE** with generous limits:
-
-| Service | Free Tier | Monthly Limit | Sufficient For |
-|---------|-----------|---------------|----------------|
-| **Cloudflare Workers** | ✅ | 100,000 requests/day | ~3M requests/month |
-| **Cloudflare KV** | ✅ | 100,000 reads/day<br>1,000 writes/day | ~3M reads, ~30K writes |
-| **Vercel Hosting** | ✅ | 100 GB bandwidth | ~100K visitors |
-
-**Total Monthly Cost: $0** 🎉
-
-**Upgrade only if:**
-- More than 3M monthly page views
-- More than 30K building updates per month
-- Need custom domain SSL (Cloudflare offers free)
-
----
-
-## 🌐 Browser Compatibility
-
-### Desktop
-| Browser | Minimum Version | Status |
-|---------|----------------|--------|
-| Chrome | 90+ | ✅ Fully Supported |
-| Firefox | 88+ | ✅ Fully Supported |
-| Safari | 14+ | ✅ Fully Supported |
-| Edge | 90+ | ✅ Fully Supported |
-
-### Mobile
-| Platform | Minimum Version | Status |
-|----------|----------------|--------|
-| iOS Safari | 14+ | ✅ Fully Supported |
-| Chrome Android | 90+ | ✅ Fully Supported |
-| Samsung Internet | 15+ | ✅ Fully Supported |
-| Firefox Mobile | 88+ | ✅ Fully Supported |
-
-**Progressive Web App (PWA):**
-- ✅ Installable on mobile home screen
-- ✅ Offline support after first visit
-- ✅ Native app-like experience
-- ✅ Push notifications ready (not implemented)
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Problem: Panning/dragging not working**
-- ✅ **FIXED in v2.0!** - Update to latest version
-- ✅ Desktop: Click and drag on empty space (not on objects)
-- ✅ Desktop: Hold Space key and drag anywhere
-- ✅ Mobile: Touch and drag with one finger
-- ✅ If still not working, hard refresh (Ctrl+Shift+R)
-
-**Problem: Zoom controls not visible**
-- ✅ **FIXED in v2.0!** - Zoom buttons now always visible
-- ✅ Look for +/- buttons in bottom-right corner
-- ✅ Also available via keyboard: +/- keys
-- ✅ Mobile: Pinch to zoom also worksml`
-- ✅ Test worker directly: `https://your-worker.workers.dev/api/buildings/test`
-
-**Problem: Viewer shows "Building not found"**
-- ✅ Ensure building was saved to *cloud*, not just localStorage
-- ✅ Verify building ID in URL matches the saved ID
-- ✅ Check Cloudflare KV dashboard for stored data
-- ✅ Test API endpoint with saved building ID
-
-**Problem: QR code doesn't work**
-- ✅ Save building to cloud *before* generating QR
-- ✅ Verify QR code URL format: `https://your-domain.vercel.app/viewer.html?building=<id>`
-- ✅ Test URL in browser before scanning
-
-**Problem: Canvas not scrollable on mobile**
-- ✅ Hard refresh browser (Ctrl+Shift+R)
-- ✅ Clear browser cache
-- ✅ Check for console errors
-- ✅ Ensure viewport meta tag is present in HTML
-
-**Problem: Icons not appearing in admin**
-- ✅ Check `icons.js` is loaded before `admin.js` in HTML
-- ✅ Open browser console, look for JavaScript errors
-- ✅ Verify SVG icons have `fill="currentColor"` attribute
-- ✅ Hard refresh to clear cached files
-
-**Problem: Slow performance on mobile**
-- ✅ Reduce number of objects on canvas (<100 recommended)
-- ✅ Use simpler shapes instead of complex icons
-- ✅ Disable unnecessary animations
-- ✅ Clear browser cache and data
-
----
-
-## 🔒 Security & Privacy
-
-### Current Status (MVP)
-⚠️ **No authentication implemented** - Suitable for public/internal use only
-
-**Anyone with the URL can:**
-- ✅ View floor plans (intended behavior)
-- ⚠️ Edit floor plans if they access admin URL
-
-### Recommendations for Production
-
-**Add Authentication:**
-```javascript
-// Example: Simple password protection per building
-const BUILDING_PASSWORDS = {
-  'building-123': 'secret-password-123'
-};
+**Frontend (Vercel):**
+```bash
+npm install -g vercel
+vercel --prod
+# Set output directory to: public
 ```
 
-**Implement Rate Limiting:**
-```javascript
-// In Cloudflare Worker
-if (requestsPerMinute > 100) {
-  return new Response('Too many requests', { status: 429 });
+After deploying the worker, update the API URL in `public/js/api.js` (line 6) to point to your worker subdomain.
+
+---
+
+## API Reference
+
+The Cloudflare Worker exposes a simple REST API:
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/buildings/:id` | Load a building |
+| `POST` | `/api/buildings/:id` | Save a building |
+| `DELETE` | `/api/buildings/:id` | Delete a building |
+| `POST` | `/api/buildings/:id/generate-qr` | Get viewer URL |
+
+All responses are JSON. CORS is enabled for all origins.
+
+---
+
+## Data Model
+
+A building is stored as a single JSON object under its ID in Cloudflare KV:
+
+```json
+{
+  "id": "building-uuid",
+  "name": "Building Name",
+  "floors": [
+    {
+      "id": "floor-uuid",
+      "name": "Ground Floor",
+      "canvasData": {}
+    }
+  ],
+  "updatedAt": "2026-01-01T00:00:00Z"
 }
 ```
-### Getting Started
-- **[USER_GUIDE.md](USER_GUIDE.md)** - 📖 **NEW!** Complete user guide with hidden features & pro tips
-- **[QUICKSTART.md](QUICKSTART.md)** - 5-minute setup guide
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Detailed deployment instructions
 
-### Technical Documentation
-- **[TECHNICAL_ARCHITECTURE.md](docs/TECHNICAL_ARCHITECTURE.md)** - System design and architecture
-- **[PRD.md](docs/PRD.md)** - Product requirements document
-- **[TESTING.md](TESTING.md)** - Testing procedures and guidelines
-
-> **👉 New users:** Start with [USER_GUIDE.md](USER_GUIDE.md) for a comprehensive walkthrough!/yourdomain.com');
-```
-
-**Use Environment Variables:**
-```toml
-# wrangler.toml
-[env.production]
-vars = { ADMIN_PASSWORD = "your-secret-password" }
-```
+`canvasData` is the raw Fabric.js canvas JSON — serialized objects, positions, styles, and custom properties (`name`, `popupText`, `tags`, `iconType`).
 
 ---
 
-## 📚 Documentation
+## Keyboard Shortcuts
 
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Detailed deployment instructions
-- **[QUICKSTART.md](QUICKSTART.md)** - 5-minute setup guide
-- **[TECHNICAL_ARCHITECTURE.md](docs/TECHNICAL_ARCHITECTURE.md)** - System design
-- **[PRD.md](docs/PRD.md)** - Product requirements
-- **[TESTING.md](TESTING.md)** - Testing procedures
+### Editor
 
----
+| Shortcut | Action |
+|---|---|
+| `Ctrl + Z` | Undo |
+| `Ctrl + Y` | Redo |
+| `Ctrl + C` | Copy selected |
+| `Ctrl + V` | Paste |
+| `Ctrl + S` | Save draft to browser |
+| `Delete` | Remove selected object |
+| `Shift + Click` | Multi-select |
+| `Space + Drag` | Pan canvas |
+| `Arrow Keys` | Pan canvas |
 
-## 🤝 Contributing
+### Viewer
 
-We welcome contributions! Here's how you can help:
-
-**Bug Reports:**
-- Open an issue with steps to reproduce
-- Include browser/device information
-- Attach screenshots if applicable
-
-**Feature Requests:**
-- Describe the use case
-- Explain expected behavior
-- Consider implementation complexity
-
-**Pull Requests:**
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-**Code Style:**
-- Use meaningful variable names
-- Comment complex logic
-- Follow existing patterns
-- Test on mobile and desktop
+| Shortcut | Action |
+|---|---|
+| `Arrow Keys` | Pan map |
+| `+ / -` | Zoom in/out |
+| `0` | Reset view |
+| `Escape` | Close popup |
+| `/` | Focus search |
 
 ---
 
-## 📄 License
+## Security Note
 
-**MIT License** - Free for personal and commercial use
-
-```
-Copyright (c) 2026 IntraMap Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+This is an MVP with no authentication layer. Anyone who knows the admin URL for a building can edit it. For production use, authentication (password per building or OAuth) should be added before exposing the editor publicly. The viewer is intentionally public.
 
 ---
 
-## 🙏 Acknowledgments
+## License
 
-**Built with excellent open-source tools:**
-
-- **[Fabric.js](http://fabricjs.com/)** - Powerful canvas library for interactive graphics
-- **[QRCode.js](https://davidshimjs.github.io/qrcodejs/)** - Pure JavaScript QR code generation
-- **[Cloudflare Workers](https://workers.cloudflare.com/)** - Blazing fast serverless platform
-- **[Vercel](https://vercel.com/)** - Premier frontend hosting and deployment
-- **[Claude](https://claude.ai/)** - AI assistant for code generation and architecture
-
-**Special thanks to:**
-- All open-source contributors
-- The Fabric.js community
-- Cloudflare and Vercel teams
+MIT — see [LICENSE](LICENSE).
 
 ---
 
-## 📧 Support & Contact
+## Author
 
-**Need help?**
-- 📖 Read the [documentation](docs/)
-- 🐛 Report bugs via [GitHub Issues](../../issues)
-- 💬 Ask questions in [Discussions](../../discussions)
-- 📧 Email: your-email@example.com (replace with actual)
+M Kaleem Akhtar — built as a university project demonstrating a full-stack web application with a practical indoor navigation use case.
 
-**Professional Support:**
-- Custom implementations available
-- Enterprise deployment assistance
-- Training and workshops
-- Contact for pricing
-
----
-
-## 🗺️ Roadmap
-
-**Version 2.1 (Planned)**
-- [ ] Multi-language support (i18n)
-- [ ] Floor plan templates library
-- [ ] Bulk import/export (JSON/CSV)
-- [ ] Analytics dashboard
-- [ ] User authentication
-
-**Version 2.2 (Future)**
-- [ ] Real-time collaboration
-- [ ] 3D floor visualization
-- [ ] Voice navigation
-- [ ] Accessibility improvements (WCAG 2.1 AA)
-- [ ] Native mobile apps (React Native)
-
-**Want to contribute?** Pick an item from the roadmap and submit a PR!
-
----
-
-<div align="center">
-
-**Made with ❤️ for better indoor navigation**
-
-[Demo](https://intra-map-six.vercel.app) · [Documentation](docs/) · [Report Bug](../../issues) · [Request Feature](../../issues)
-
----
-
-**IntraMap v2.0.0** | [MIT License](LICENSE) | © 2026
-
-</div>

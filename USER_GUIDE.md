@@ -239,7 +239,7 @@ Scroll through the icon library to add:
 
 ## Hidden Features & Pro Tips
 
-### 🎯 Multi-Select Magic (Editor)
+### Multi-Select (Editor)
 
 **Method 1: Shift+Click**
 1. Select first object
@@ -260,7 +260,7 @@ Scroll through the icon library to add:
 - Delete multiple objects with one Delete keystroke
 - Copy/paste groups of objects
 
-### 🎨 Quick Color Workflows (Editor)
+### Quick Color Workflows (Editor)
 
 **For Consistent Theming:**
 1. Create one object with perfect color
@@ -275,7 +275,7 @@ Scroll through the icon library to add:
 - ⚫ Gray: Retail & Shops
 - 🟡 Orange: Information Points
 
-### 🔍 Search-Optimized Tags (Editor)
+### Search-Optimized Tags (Editor)
 
 **Tag Strategy:**
 Add multiple searchable keywords to make locations easy to find:
@@ -293,7 +293,7 @@ Add multiple searchable keywords to make locations easy to find:
 - Some say "bathroom", others say "restroom"
 - More tags = easier to find!
 
-### ⚡ Speed Editing Tips (Editor)
+### Speed Editing Tips (Editor)
 
 1. **Quick Shape Creation**:
    - Select tool → Click canvas → Shape auto-placed
@@ -312,7 +312,7 @@ Add multiple searchable keywords to make locations easy to find:
    - Ctrl+C, Ctrl+V, Ctrl+V, Ctrl+V...
    - Create patterns quickly!
 
-### 📱 Mobile-Specific Features (Viewer)
+### Mobile-Specific Features (Viewer)
 
 **Touch Gestures:**
 - **One finger drag**: Pan the map
@@ -325,7 +325,7 @@ Add multiple searchable keywords to make locations easy to find:
 - Search bar optimized for thumb reach
 - Floor selector easy to tap
 
-### 🚀 Pro Navigation Tricks (Viewer)
+### Navigation Tips (Viewer)
 
 **Fastest Way to Find Anything:**
 1. Open search bar
@@ -480,9 +480,8 @@ Make sure:
 ## Getting Help
 
 ### Resources
-- **Documentation**: Check `/docs` folder
-- **GitHub Issues**: Report bugs
-- **Email Support**: [Add your email]
+- **Documentation**: See the `docs/` folder
+- **GitHub Issues**: Report bugs via the repository issue tracker
 
 ### Quick Reference
 - **Demo Building**: Try the sample map to see all features
@@ -491,19 +490,3 @@ Make sure:
 
 ---
 
-## What's New in Version 2.0
-
-✅ **Fixed**: Panning/dragging now works perfectly on all devices  
-✅ **Fixed**: Zoom controls consistently visible  
-✅ **Improved**: Touch gestures are more responsive  
-✅ **Improved**: Better multi-selection support  
-✅ **Added**: Comprehensive keyboard shortcuts  
-✅ **Added**: This user guide!  
-
----
-
-### Happy Mapping! 🗺️
-
-IntraMap makes indoor navigation simple and beautiful. Now go create something amazing!
-
-**Pro Tip**: Start with a simple map, save it, test it on your phone, then gradually add more detail. This iterative approach makes better maps!

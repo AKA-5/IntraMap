@@ -1,6 +1,6 @@
-# 🚀 IntraMap Deployment Guide
+# IntraMap — Deployment Guide
 
-Complete step-by-step guide to deploy IntraMap to production using free services.
+Step-by-step instructions to deploy IntraMap to production using free services.
 
 ## Prerequisites
 
@@ -223,9 +223,9 @@ Then visit: `https://intramap.vercel.app/viewer.html?building=sample-mall`
 
 ---
 
-## 🎉 You're Done!
+## Deployment Complete
 
-Your IntraMap is now live and accessible at:
+Your IntraMap instance will be accessible at:
 - **Frontend**: `https://intra-map-six.vercel.app`
 - **Backend**: `https://intramap-api.kaleempk555.workers.dev`
 
@@ -245,7 +245,7 @@ Your IntraMap is now live and accessible at:
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### "Building not found" error in viewer
 
@@ -302,7 +302,7 @@ Your IntraMap is now live and accessible at:
 
 ---
 
-## 📊 Monitoring Usage
+## Monitoring Usage
 
 ### Cloudflare Dashboard
 
@@ -326,7 +326,7 @@ Your IntraMap is now live and accessible at:
 
 ---
 
-## 🔄 Updating Your Deployment
+## Updating Your Deployment
 
 ### Update Frontend
 
@@ -350,7 +350,7 @@ wrangler deploy
 
 ---
 
-## 💾 Backup Your Data
+## Backup Your Data
 
 ### Export all buildings from KV
 
@@ -370,7 +370,7 @@ wrangler kv:key put "building:YOUR_BUILDING_ID" --path=backup.json --namespace-i
 
 ---
 
-## 🎯 Production Checklist
+## Production Checklist
 
 Before going live:
 
@@ -388,7 +388,7 @@ Before going live:
 
 ---
 
-## 📞 Need Help?
+## Need Help?
 
 - Check [README.md](README.md) for general usage
 - Review [Cloudflare Workers docs](https://developers.cloudflare.com/workers/)
@@ -397,4 +397,4 @@ Before going live:
 
 ---
 
-**Happy Mapping! 🗺️**
+
