@@ -227,5 +227,5 @@ MIT — see [LICENSE](LICENSE).
 
 ## Author
 
-M Kaleem Akhtar — built as a university project demonstrating a full-stack web application with a practical indoor navigation use case.
+M Kaleem Akhtar - built as a personal project demonstrating a full-stack web application with a practical indoor navigation use case.
 
